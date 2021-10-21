@@ -1,0 +1,3 @@
+[submodule "Deps/PetrolEngine"]
+	path = Deps/PetrolEngine
+	url = https://github.com/iLikeTrioxin/PetrolEngine
