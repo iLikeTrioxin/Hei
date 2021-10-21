@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/assimp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/entt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/freetype" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/freetype/subprojects/dlg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/glad" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/glfw" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/lua-cmake" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/lua-cmake/upstream" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/shaderc" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Deps/PetrolEngine/Deps/stb" vcs="Git" />
+  </component>
+</project>
