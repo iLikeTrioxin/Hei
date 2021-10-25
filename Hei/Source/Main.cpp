@@ -126,8 +126,7 @@ void Game::gameLoop() { LOG_FUNCTION();
         for (auto* w : wr) {
             camera.updatePerspectiveMatrix(window->getAspectRatio());
             Renderer::OnWindowResize(w->data.width, w->data.height);
-            wr.erase(wr.begin());
-            DEBUG_LOG(benchmarker.getMin());
+            EventStack::popFront<Window::WindowResizedEvent>();
         }
 
         camMov.update(window, mainCamera);
@@ -140,11 +139,11 @@ void Game::gameLoop() { LOG_FUNCTION();
 
             Transform a = Transform();
 
-            //a.position = { 10.f, 475.f, 0.f };
-            //Renderer::renderText(".1% LOW FPS: " + std::to_string(1.0 / dotOnePercentLow), a, camera, .4f);
-            //
-            //a.position = { 10.f, 450.f, 0.f };
-            //Renderer::renderText("1.% LOW FPS: " + std::to_string(1.0 / OnePercentLow), a, camera, .4f);
+            a.position = { 10.f, 475.f, 0.f };
+            Renderer::renderText(".1% LOW FPS: " + std::to_string(1.0 / benchmarker.getAVG()), a);
+            
+            a.position = { 10.f, 450.f, 0.f };
+            Renderer::renderText("1.% LOW FPS: " + std::to_string(1.0 / benchmarker.getDotOnePercentLow()), a);
 
             a.position = { 10.f, 425.f, 0.f };
             //Renderer2D::renderText( std::to_string(1.0 / average), a, camera, .4f);
