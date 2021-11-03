@@ -1,4 +1,5 @@
 #define PETROL_ENGINE_DEBUG
+#define DEBUG
 #include <Core/Files.h>
 #include <Components.h>
 #include <Renderer/Renderer.h>
@@ -11,6 +12,7 @@
 #include <Entity.h>
 #include <GLFW/glfw3.h>
 #include <Utils/Benchmarker.h>
+#include <Sound/Sound.h>
 
 using namespace PetrolEngine;
 
@@ -25,20 +27,15 @@ public:
     void gameLoop();
 };
 
-Entity mainCamera;
+Entity mainCamera{};
 
 Game::Game() {
-    DEBUG_LOG("Size of int8  is " << sizeof(int8 ));
-    DEBUG_LOG("Size of int16 is " << sizeof(int16));
-    DEBUG_LOG("Size of int32 is " << sizeof(int32));
-    DEBUG_LOG("Size of int64 is " << sizeof(int64));
-
     this->window = Window::create(800, 600, "Hei");
 
-    Image::flipImages(true);
-
     window->init();
-    //window->setIcon(Image("../Hei/Resources/cobweb.png"));
+    window->setIcon(Image::create("../Hei/Resources/fuel_distributor64.png"));
+    Sound::init();
+    Image::flipImages(true);
 
     Renderer::init(RendererAPI::API::OpenGL);
     Text::init("../Hei/Resources/Fonts/Poppins/Poppins-Black.ttf");
@@ -87,16 +84,11 @@ void Game::gameLoop() { LOG_FUNCTION();
 
     camera.updatePerspectiveMatrix(window->getAspectRatio());
 
-    uint idk = 0;
-    Renderer::getDeviceConstantValue(DeviceConstant::MAX_TEXTURE_IMAGE_UNITS, (void*) &idk);
-    DEBUG_LOG("aaa:"<<std::to_string(idk));
-
     double previousXCursorPos = cursorXPos;
     double previousYCursorPos = cursorYPos;
     double previousFrame      = glfwGetTime();
 
-    Benchmarker benchmarker = Benchmarker( (void*) glfwGetTime );
-
+    Benchmarker benchmarker = Benchmarker();
     while (!window->shouldClose())
     {
         deltaXMousePos     = cursorXPos - previousXCursorPos;
@@ -119,13 +111,21 @@ void Game::gameLoop() { LOG_FUNCTION();
             auto shad1 = ReadFile("../Hei/Resources/Shaders/shader.vert");
             auto shad2 = ReadFile("../Hei/Resources/Shaders/shader.frag");
 
-            Shader::load("default", "")->recompileShader(shad1.c_str(), shad2.c_str() );
+            auto a = Shader::load("default");
+            a->recompileShader(shad1.c_str(), shad2.c_str() );
+        }
+
+        auto& kr = EventStack::getEvents<Window::KeyPressedEvent>();
+        for (auto* w : kr) {
+            if(w->key == GLFW_KEY_M && !w->repeat) Sound::playSound("/home/samuel/Downloads/marcin.wav");
+            EventStack::popFront<Window::KeyPressedEvent>();
         }
 
         auto& wr = EventStack::getEvents<Window::WindowResizedEvent>();
         for (auto* w : wr) {
             camera.updatePerspectiveMatrix(window->getAspectRatio());
             Renderer::OnWindowResize(w->data.width, w->data.height);
+
             EventStack::popFront<Window::WindowResizedEvent>();
         }
 
@@ -133,20 +133,13 @@ void Game::gameLoop() { LOG_FUNCTION();
 
         for (auto& scene : scenes) scene.update(window->getAspectRatio());
 
-        // display frame rate
         {
             LOG_SCOPE("D-F-R");
 
             Transform a = Transform();
 
             a.position = { 10.f, 475.f, 0.f };
-            Renderer::renderText(".1% LOW FPS: " + std::to_string(1.0 / benchmarker.getAVG()), a);
-            
-            a.position = { 10.f, 450.f, 0.f };
-            Renderer::renderText("1.% LOW FPS: " + std::to_string(1.0 / benchmarker.getDotOnePercentLow()), a);
-
-            a.position = { 10.f, 425.f, 0.f };
-            //Renderer2D::renderText( std::to_string(1.0 / average), a, camera, .4f);
+            Renderer::renderText(".1% LOW FPS: " + std::to_string(1.0/deltaTime), a);
         }
 
         EventStack::clear();
