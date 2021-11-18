@@ -18,8 +18,7 @@ using namespace PetrolEngine;
 
 class Game {
 public:
-    std::shared_ptr<Window> window;
-
+    Window* window;
     Vector<Scene> scenes;
 
     Game();
