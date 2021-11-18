@@ -1,3 +1,5 @@
 [submodule "Deps/PetrolEngine"]
 	path = Deps/PetrolEngine
 	url = https://github.com/iLikeTrioxin/PetrolEngine
+[submodule "PetrolEngine"]
+	branch = dev
