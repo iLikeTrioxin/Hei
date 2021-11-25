@@ -1,24 +1,26 @@
 #define PETROL_ENGINE_DEBUG
 #define DEBUG
+
 #include <Core/Files.h>
 #include <Components.h>
-#include <Renderer/Renderer.h>
 #include <modelLoader.h>
 #include <DebugTools.h>
-#include <Renderer/Shader.h>
 #include <Renderer/Text.h>
 #include <Scene.h>
 #include <Core/Window.h>
 #include <Entity.h>
-#include <GLFW/glfw3.h>
 #include <Utils/Benchmarker.h>
 #include <Sound/Sound.h>
+#include <Renderer/OpenGL/OpenGL.h>
+#include "Core/GLFW/GLFW.h"
 
 using namespace PetrolEngine;
 
 class Game {
 public:
     Window* window;
+    Renderer* renderer;
+    Text text;
     Vector<Scene> scenes;
 
     Game();
@@ -29,25 +31,33 @@ public:
 Entity mainCamera{};
 
 Game::Game() {
-    this->window = Window::create(800, 600, "Hei");
+    WRC* wrc = &GLFW;
+    RRC* rrc = &OpenGL;
+
+    this->window = Window::create(wrc, 800, 600, "Hei");
 
     window->init();
-    window->setIcon(Image::create("../Hei/Resources/fuel_distributor64.png"));
+
+    Image* iconImage = Image::create("../Hei/Resources/fuel_distributor64.png");
+    window->setIcon(iconImage);
+    delete iconImage;
+
     Sound::init();
     Image::flipImages(true);
 
-    Renderer::init(RendererAPI::API::OpenGL);
-    Text::init("../Hei/Resources/Fonts/Poppins/Poppins-Black.ttf");
+    this->renderer = Renderer::create(rrc);
+
+    renderer->init(true);
+    auto text = Text("../Hei/Resources/Fonts/Poppins/Poppins-Black.ttf");
 
     window->setVSync(false);
 
-    auto basic = Shader::load("default",ReadFile("../Hei/Resources/Shaders/shader.vert"),ReadFile("../Hei/Resources/Shaders/shader.frag")
-    );
+    Shader* basic = Shader::create(rrc, ReadFile("../Hei/Resources/Shaders/shader.vert"), ReadFile("../Hei/Resources/Shaders/shader.frag"), "");
 
     basic->setInt  ("material.diffuse"  , 0  );
     basic->setInt  ("material.specular" , 0  );
     basic->setFloat("material.shininess", 1. );
-    basic->setInt  ("light[0].lightType", 1  );
+    basic->setInt  ("light[0].lightType", 1  ); 
 
     basic->setVec3 ("light[0].direction", 1.0f, 0.0f, 1.0f);
     basic->setVec3 ("light[0].ambient"  , 0.2f, 0.2f, 0.2f);
