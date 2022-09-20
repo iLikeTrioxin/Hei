@@ -137,7 +137,7 @@ void Game::gameLoop() { LOG_FUNCTION();
     terrainMesh.material = Material(terrainShader);
 
     auto terrainGenerator = Hei::TerrainGenerator(213);
-    terrainGenerator.generateTerrain(10, 10, 10, &terrainMesh);
+    terrainGenerator.generateTerrain(10, 10, 10, {0, -5, 0}, &terrainMesh);
 
     Benchmarker benchmarker = Benchmarker();
     while (!Window::shouldClose())

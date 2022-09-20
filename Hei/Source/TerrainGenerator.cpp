@@ -4,7 +4,7 @@
 
 #include "PerlinNoise.hpp"
 
-static const glm::vec3 edgePos[8] = {
+static const glm::ivec3 edgePos[8] = {
         {0, 0, 0},
         {1, 0, 0},
         {1, 0, 1},
@@ -28,39 +28,72 @@ glm::vec3 CalcSurfaceNormal(glm::vec3 tri1, glm::vec3 tri2, glm::vec3 tri3)
     return nrmcross;
 }
 
+struct Vec3Hash {
+    size_t operator()(const glm::vec3& k)const
+    {
+        return std::hash<float>()(k.x) ^ std::hash<float>()(k.y) ^ std::hash<float>()(k.z);
+    }
+
+    bool operator()(const glm::vec3& a, const glm::vec3& b)const
+    {
+        return a.x == b.x && a.y == b.y && a.z == b.z;
+    }
+};
+
 namespace Hei{
 
     TerrainGenerator::TerrainGenerator(uint64 seed) {
         this->seed = seed;
         this->perlin = siv::PerlinNoise(seed);
     }
-    void TerrainGenerator::generateTerrain(int width, int height, int depth, PetrolEngine::Mesh* mesh) {
+
+    void TerrainGenerator::generateTerrain(glm::ivec3 dimensions, glm::ivec3 offset, PetrolEngine::Mesh* mesh) {
+        uint8 chunk[dimensions.x][dimensions.y][dimensions.z];
+        UnorderedMap<glm::vec3, uint, Vec3Hash, Vec3Hash> vertexMap;
+
+        const glm::vec3 f = glm::vec3(dimensions) * (1.f / 8.f);
+
+        glm::ivec3 pos = {0, 0, 0};
+        for(; pos.x < dimensions.x; pos.x++){
+            for(; pos.y < dimensions.y; pos.y++){
+                for(; pos.z < dimensions.z; pos.z++){
+
+                    auto a = glm::vec3(pos + offset) * f;
+                    double v = perlin.octave3D_01(a.x, a.y, a.z, 8);
+                    //v += 5.0f;
+                    v += a.y * a.y;
+                    v = fmax(v, 0.0f);
+                    chunk[pos.x][pos.y][pos.z] = (uint8)(v * 255.0);
+
+
+                }
+            }
+        }
+
         Vector<glm::vec3> vertices;
-        Vector<PetrolEngine::Vertex> meshVertices;
-        Vector<unsigned int> indices;
+        Vector<     uint> indices;
+        pos = {0, 0, 0};
+        for (; pos.x < dimensions.x; pos.x++) {
+            for(; pos.y < dimensions.y; pos.y++){
+                for(; pos.z < dimensions.z; pos.z++){
+                    MarchingCube cube{};
 
-        const glm::vec3 f = {
-                8.0f / (float) width,
-                8.0f / (float) height,
-                8.0f / (float) depth
-        };
-
-        for(int x = 0; x < width; x++){
-            for(int y = 0; y < height; y++){
-                for(int z = 0; z < depth; z++){
-                    uint64 cube = 0;
-
-                    for(int i = 0; i < 8; i++) {
-                        auto a = (edgePos[i] + glm::vec3(x, y, z)) * f;
-                        float v = perlin.octave3D_01(a.x, a.y, a.z, 8);
-                        cube += (unsigned char) std::floor((v - a.y) * 256.0f);
-
-                        if (i != 7) cube <<= 8;
+                    for(int i = 0; i < 8; i++){
+                        glm::ivec3 edge = pos + edgePos[i];
+                        cube.edges[i] = chunk[edge.x][edge.y][edge.z];
                     }
 
-                    MarchingCubes::getCubeMesh(cube, glm::vec3(x, y, z), &vertices);
+                    MarchingCubes::getCubeMesh(cube, glm::vec3(pos), &vertices);
 
-                    for(int i = 0; i < vertices.size(); i += 3){
+                    for(int i = 0; i < vertices.size(); i++){
+                        if(vertexMap.find(vertices[i]) == vertexMap.end())
+                            vertexMap[vertices[i]] = vertexMap.size();
+
+                        vertices.push_back(vertices[i]);
+                        indices.push_back(vertexMap[vertices[i]]);
+
+
+                        /*
                         PetrolEngine::Vertex vertex1;
                         PetrolEngine::Vertex vertex2;
                         PetrolEngine::Vertex vertex3;
@@ -82,6 +115,7 @@ namespace Hei{
                         indices.push_back(indices.size());
                         indices.push_back(indices.size());
                         indices.push_back(indices.size());
+                        */
                     }
                 }
             }

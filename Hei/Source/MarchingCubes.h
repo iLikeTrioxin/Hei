@@ -9,26 +9,26 @@
 #include "Core/Logger.h"
 namespace Hei {
 
+    struct MarchingCube {
+        uint8 edges[8];
+    };
+
     class MarchingCubes {
     public:
-        static uint8 getCubeTriangulationIndex(uint64 cube) {
+        static uint8 getCubeTriangulationIndex(MarchingCube cube) {
             uint8 index = 0;
 
             for (uint8 i = 0; i < 8; i++)
-                index |= ((getCubeIndex(cube, i) > 128) ? 1 : 0) << i;
+                index |= (cube.edges[i] > 128) << i;
 
             return index;
         }
 
-        static glm::vec3 interpolateVerts(glm::vec4 v1, glm::vec4 v2, float t = 128) {
-            return v1 + (t - v1.w) / (v2.w - v1.w) * (v2 - v1);
+        static glm::vec3 interpolatePoints(glm::vec4 p1, glm::vec4 p2, float center = 128.f) {
+            return p1 + (center - p1.w) / (p2.w - p1.w) * (p2 - p1);
         }
 
-        static inline uint8 getCubeIndex(uint64 cube, uint8 i) {
-            return ((cube & (0xFF << (i*8))) >> (i*8));
-        }
-
-        static void getCubeMesh(uint64 cube, glm::vec3 coords, Vector<glm::vec3>* vertices){
+        static void getCubeMesh(MarchingCube cube, glm::vec3 coords, Vector<glm::vec3>* vertices){
             static const glm::vec3 cubeCorners[8] = {
                     {0, 0, 0},
                     {1, 0, 0},
@@ -41,8 +41,6 @@ namespace Hei {
             };
 
             uint8 cubeIndex = getCubeTriangulationIndex(cube);
-            if (cubeIndex != 0 && cubeIndex != 255)
-                LOG("cud nad wisla", 2);
 
             for(uint8 i = 0; i < 5; i++){
                 if (triangulation[cubeIndex][i * 3] == -1) return;
@@ -53,9 +51,9 @@ namespace Hei {
                     uint8 cornerA = cornerIndexAFromEdge[triangulation[cubeIndex][index]];
                     uint8 cornerB = cornerIndexBFromEdge[triangulation[cubeIndex][index]];
 
-                    glm::vec3 VertexPosition = interpolateVerts(
-                            glm::vec4(cubeCorners[cornerA] + coords, getCubeIndex(cube, cornerA)),
-                            glm::vec4(cubeCorners[cornerB] + coords, getCubeIndex(cube, cornerB))
+                    glm::vec3 VertexPosition = interpolatePoints(
+                            glm::vec4(cubeCorners[cornerA] + coords, cube.edges[cornerA]),
+                            glm::vec4(cubeCorners[cornerB] + coords, cube.edges[cornerB])
                     );
 
                     vertices->push_back(VertexPosition);

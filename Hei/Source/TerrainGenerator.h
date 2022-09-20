@@ -12,7 +12,7 @@ namespace Hei {
         TerrainGenerator(uint64 seed);
 
         uint64 seed = 213;
-        void generateTerrain(int width, int height, int depth, PetrolEngine::Mesh* mesh);
+        void generateTerrain(glm::ivec3 dimensions, glm::ivec3 offset, PetrolEngine::Mesh* mesh);
 
     private:
         siv::PerlinNoise perlin;
