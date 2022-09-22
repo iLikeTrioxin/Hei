@@ -128,16 +128,14 @@ void Game::gameLoop() { LOG_FUNCTION();
     bool cursor = true;
 
     auto terrain = scenes[0].createGameObject("terrain");
-    auto& terrainMesh = terrain->addComponent<Mesh>();
 
     String terrainVertex   = ReadFile("../Hei/Resources/Shaders/terrain.vert");
     String terrainFragment = ReadFile("../Hei/Resources/Shaders/terrain.frag");
     Ref<ShaderI> terrainShader = Shader::load("terrain", terrainVertex.c_str(), terrainFragment.c_str(), nullptr);
 
-    terrainMesh.material = Material(terrainShader);
-
-    auto terrainGenerator = Hei::TerrainGenerator(213);
-    terrainGenerator.generateTerrain(10, 10, 10, {0, -5, 0}, &terrainMesh);
+    auto terrainGenerator = Hei::TerrainGenerator(213, terrain);
+    terrainGenerator.setMaterial(Material(terrainShader));
+    terrainGenerator.generateTerrainAround(glm::vec3(0, 0, 0), 2);
 
     Benchmarker benchmarker = Benchmarker();
     while (!Window::shouldClose())
