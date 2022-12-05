@@ -17,7 +17,7 @@ struct Vec3Hash {
 };
 
 namespace Hei {
-    using PetrolEngine::Entity;
+    using namespace PetrolEngine;
 
     class TerrainGenerator {
     public:
@@ -27,8 +27,8 @@ namespace Hei {
         Entity* generateChunk(glm::ivec3 offset);
         void generateTerrainAround(glm::vec3 position, int radius);
 
-        PetrolEngine::Material material;
-        void setMaterial(PetrolEngine::Material material) {
+        Material material;
+        void setMaterial(Material material) {
             this->material = material;
         }
 

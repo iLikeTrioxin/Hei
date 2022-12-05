@@ -10,9 +10,6 @@
 #include "Renderer/OpenGL/OpenGL.h"
 
 #include "Renderer/Renderer/Renderer.h"
-#include "Renderer/Renderer/Shader.h"
-#include "Renderer/Renderer/Texture.h"
-#include "Renderer/Renderer/VertexArray.h"
 #include "Renderer/Renderer/Text.h"
 
 #include "Core/GLFW/GLFW.h"
@@ -22,7 +19,7 @@
 #include "Components/Material.h"
 #include "Components/Movement.h"
 #include "Components/TestRotationScript.h"
-
+#include <Renderer/Renderer/defaultShaders.h>
 #include <Scene.h>
 #include "Components/Entity.h"
 #include <Utils/Benchmarker.h>
@@ -68,7 +65,7 @@ Game::Game() {
 
     String basicVertexShader   = ReadFile("../Hei/Resources/Shaders/shader.vert");
     String basicFragmentShader = ReadFile("../Hei/Resources/Shaders/shader.frag");
-    Ref<ShaderI> basic = Shader::load("default", basicVertexShader.c_str(), basicFragmentShader.c_str(), nullptr);
+    Ref<Shader> basic = Renderer::loadShader("default", defaultVertexShader, defaultFragmentShader);
 
     basic->setInt  ("material.diffuse"  , 0  );
     basic->setInt  ("material.specular" , 0  );
@@ -88,7 +85,7 @@ Game::Game() {
     player.camera = scene.createGameObject("Camera", player.entity);
 
     auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
-    auto c = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
+    /*auto c = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
     auto b = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
 
     auto& kc = a->getComponent<Transform>();
@@ -99,15 +96,41 @@ Game::Game() {
     ka.rotation = glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)));
 
     b->addComponent<TestRotationScript>();
+    */
+    /*
+    class AKA {
+    public:
+        glm::vec3 position;
+        glm::vec2 tex;
+        glm::vec3 normal;
+    };
+
+    { LOG_SCOPE("vertex data");
+        static VertexData data;
+        data.changeLayout({
+            {"pos", ShaderDataType::Float3},
+            {"tex", ShaderDataType::Float2},
+            {"nor", ShaderDataType::Float3},
+        });
+
+        data.resize(100);
+        static AKA *akal = (AKA *) data.data;;
+
+        for(int i=0;i<100;i++){
+            data[i]["pos"] = glm::vec3(i, i+17, i-3);
+            data[i]["tex"] = glm::vec2(i*0.2, i*0.1);
+            data[i]["nor"] = glm::vec3(i*2, i*4, i);
+        }
+
+        std::cout<<akal[1].position.x<<std::endl;
+        std::cout<<akal[1].position.y<<std::endl;
+        std::cout<<akal[1].position.z<<std::endl;
+    }*/
 
     gameLoop();
 }
-#include <Renderer/Renderer/Framebuffer.h>
 
 void Game::gameLoop() { LOG_FUNCTION();
-    uint   iter = 0;
-    double time = 0;
-
     auto& camTra = player.camera->getComponent<Transform>();
     auto& camera = player.camera->addComponent<  Camera >();
 
@@ -119,8 +142,8 @@ void Game::gameLoop() { LOG_FUNCTION();
     double previousYCursorPos = cursorYPos;
     double previousFrame      = glfwGetTime();
 
-    Ref<TextureI> texture = Texture::create(800, 600, TextureFormat::RGBA8);
-    Ref<FramebufferI> framebuffer = Framebuffer::create(FramebufferSpecification{ 800, 600});
+    Ref<Texture> texture = Renderer::createTexture(800, 600, TextureFormat::RGBA8);
+    Ref<Framebuffer> framebuffer = Renderer::createFramebuffer(FramebufferSpecification{800, 600});
     //framebuffer->addAttachment(texture);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID());
 
@@ -129,18 +152,38 @@ void Game::gameLoop() { LOG_FUNCTION();
 
     auto terrain = scenes[0].createGameObject("terrain");
 
-    String terrainVertex   = ReadFile("../Hei/Resources/Shaders/terrain.vert");
-    String terrainFragment = ReadFile("../Hei/Resources/Shaders/terrain.frag");
-    Ref<ShaderI> terrainShader = Shader::load("terrain", terrainVertex.c_str(), terrainFragment.c_str(), nullptr);
+    Image* tex = Image::create("../Hei/Resources/Stone.png");
+
+    Material material;
+
+    auto frag = ReadFile("../Hei/Resources/Shaders/terrain.frag");
+    auto vert = ReadFile("../Hei/Resources/Shaders/terrain.vert");
+    material.shader = Renderer::loadShader("terrain", vert, frag);
+    material.textures.push_back(Renderer::createTexture(tex));
+
+    delete tex;
 
     auto terrainGenerator = Hei::TerrainGenerator(213, terrain);
-    terrainGenerator.setMaterial(Material(terrainShader));
+    terrainGenerator.setMaterial(material);
     terrainGenerator.generateTerrainAround(glm::vec3(0, 0, 0), 2);
 
-    Benchmarker benchmarker = Benchmarker();
-    while (!Window::shouldClose())
-    {
+    auto skybox = scenes[0].createGameObject("skybox");
+    auto& skyMesh = skybox->addComponent<Mesh>(createCube());
 
+    skyMesh.invertFaces();
+    skyMesh.recalculateMesh();
+
+    auto skyboxTexture = Renderer::createTexture(0, 0, TextureFormat::RGBA8, TextureType::TextureCube);
+    skyboxTexture->hejka("../Hei/Resources/FS000_Night_02_Moonless.png");
+
+    skyMesh.material.textures.push_back(skyboxTexture);;
+    skyMesh.material.shader = Renderer::loadShader("skybox",
+        ReadFile("../Hei/Resources/Shaders/skybox.vert"),
+        ReadFile("../Hei/Resources/Shaders/skybox.frag")
+    );
+
+    Benchmarker benchmarker = Benchmarker();
+    while (!Window::shouldClose()) {
         deltaXMousePos     = cursorXPos - previousXCursorPos;
         deltaYMousePos     = cursorYPos - previousYCursorPos;
         previousXCursorPos = cursorXPos;
@@ -159,17 +202,12 @@ void Game::gameLoop() { LOG_FUNCTION();
             Window::close();
 
         if (Window::isPressed(GLFW_KEY_R)) {
+            auto shader = Renderer::loadShader("default");
+
             auto shad1 = ReadFile("../Hei/Resources/Shaders/shader.vert");
             auto shad2 = ReadFile("../Hei/Resources/Shaders/shader.frag");
 
-            auto a = Shader::load("default");
-            a->recompileShader(shad1.c_str(), shad2.c_str() );
-
-            auto shad11 = ReadFile("../Hei/Resources/Shaders/textShader.vert");
-            auto shad12 = ReadFile("../Hei/Resources/Shaders/textShader.frag");
-
-            auto b = Shader::load("textShader");
-            b->recompileShader(shad11.c_str(), shad12.c_str() );
+            shader->recomplie(shad1, shad2);
         }
 
         auto& kr = EventStack::getEvents<WindowI::KeyPressedEvent>();
@@ -201,16 +239,15 @@ void Game::gameLoop() { LOG_FUNCTION();
 
         for (auto& scene : scenes) scene.update();
 
-        {
-            LOG_SCOPE("D-F-R");
+        { LOG_SCOPE("D-F-R");
+            Transform tran = Transform(
+                {10.f, 475.f, 0.f},
+                {.1f, .1f, .1f}
+            );
 
-            Transform a = Transform();
+            tran.position = glm::vec3(0, 0, 0);
 
-            //a.position = { 10.f, 475.f, 0.f };
-
-            a.scale = { 1.8f, 1.8f, 1.8f };
-
-            Renderer::renderText(".1% LOW FPS: " + toString(1.0 / deltaTime), a, "arial");
+            Renderer::renderText(".1% LOW FPS: " + toString(1.0 / deltaTime), tran, "../Hei/Resources/Fonts/xd.ttf");
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
