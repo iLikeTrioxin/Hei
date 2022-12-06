@@ -54,7 +54,7 @@ Game::Game() {
     Sound   ::init();
     Text    ::init();
 
-    Window::setIcon("../Hei/Resources/fuel_distributor64.png");
+    //Window::setIcon("../Hei/Resources/fuel_distributor64.png");
 
     Image::flipImages(true);
 
