@@ -84,7 +84,7 @@ Game::Game() {
     player.entity = scene.createGameObject("player");
     player.camera = scene.createGameObject("Camera", player.entity);
 
-    auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
+//    auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
     /*auto c = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
     auto b = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
 
@@ -143,29 +143,32 @@ void Game::gameLoop() { LOG_FUNCTION();
     double previousFrame      = glfwGetTime();
 
     Ref<Texture> texture = Renderer::createTexture(800, 600, TextureFormat::RGBA8);
-    Ref<Framebuffer> framebuffer = Renderer::createFramebuffer(FramebufferSpecification{800, 600});
+//    Ref<Framebuffer> framebuffer = Renderer::createFramebuffer(FramebufferSpecification{800, 600});
     //framebuffer->addAttachment(texture);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID());
+//    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID());
 
     for(auto& scene : scenes) scene.start();
     bool cursor = true;
 
-    auto terrain = scenes[0].createGameObject("terrain");
+    // terrain
+//    auto terrain = scenes[0].createGameObject("terrain");
+//
+//    Image* tex = Image::create("../Hei/Resources/Stone.png");
+//
+//    Material material;
+//
+//    auto frag = ReadFile("../Hei/Resources/Shaders/terrain.frag");
+//    auto vert = ReadFile("../Hei/Resources/Shaders/terrain.vert");
+//    material.shader = Renderer::loadShader("terrain", vert, frag);
+//    material.textures.push_back(Renderer::createTexture(tex));
+//
+//    delete tex;
+//
+//    auto terrainGenerator = Hei::TerrainGenerator(213, terrain);
+//    terrainGenerator.setMaterial(material);
+//    terrainGenerator.generateTerrainAround(glm::vec3(0, 0, 0), 2);
 
-    Image* tex = Image::create("../Hei/Resources/Stone.png");
-
-    Material material;
-
-    auto frag = ReadFile("../Hei/Resources/Shaders/terrain.frag");
-    auto vert = ReadFile("../Hei/Resources/Shaders/terrain.vert");
-    material.shader = Renderer::loadShader("terrain", vert, frag);
-    material.textures.push_back(Renderer::createTexture(tex));
-
-    delete tex;
-
-    auto terrainGenerator = Hei::TerrainGenerator(213, terrain);
-    terrainGenerator.setMaterial(material);
-    terrainGenerator.generateTerrainAround(glm::vec3(0, 0, 0), 2);
+    // skybox
 
     auto skybox = scenes[0].createGameObject("skybox");
     auto& skyMesh = skybox->addComponent<Mesh>(createCube());
@@ -182,7 +185,7 @@ void Game::gameLoop() { LOG_FUNCTION();
         ReadFile("../Hei/Resources/Shaders/skybox.frag")
     );
 
-    Benchmarker benchmarker = Benchmarker();
+//    Benchmarker benchmarker = Benchmarker();
     while (!Window::shouldClose()) {
         deltaXMousePos     = cursorXPos - previousXCursorPos;
         deltaYMousePos     = cursorYPos - previousYCursorPos;
@@ -240,14 +243,13 @@ void Game::gameLoop() { LOG_FUNCTION();
         for (auto& scene : scenes) scene.update();
 
         { LOG_SCOPE("D-F-R");
-            Transform tran = Transform(
-                {10.f, 475.f, 0.f},
-                {.1f, .1f, .1f}
-            );
-
-            tran.position = glm::vec3(0, 0, 0);
-
-            Renderer::renderText(".1% LOW FPS: " + toString(1.0 / deltaTime), tran, "../Hei/Resources/Fonts/xd.ttf");
+//            Transform tran = Transform(
+//                {10.f, 475.f, 0.f},
+//                {.1f, .1f, .1f}
+//            );
+//
+//            tran.position = glm::vec3(0, 0, 0);
+//            Renderer::renderText(".1% LOW FPS: " + toString(1.0 / deltaTime), tran, "../Hei/Resources/Fonts/xd.ttf");
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -258,7 +260,7 @@ void Game::gameLoop() { LOG_FUNCTION();
 
         Window::swapBuffers();
         Window::pollEvents ();
-        benchmarker.frameDone();
+//        benchmarker.frameDone();
     }
 
     Sound::destroy();

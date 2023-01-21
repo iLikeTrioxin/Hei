@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/Aliases.h>
+
 #include "Aliases.h"
 
 #include "glm/vec3.hpp"
