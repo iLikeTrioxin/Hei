@@ -1,39 +1,54 @@
+#include "Core/Aliases.h"
+#include "Core/Components/Mesh.h"
+#include "Core/Components/Transform.h"
+#include "Core/Renderer/Shader.h"
+#include "Static/Window/Window.h"
+#include <cstring>
+#include <string>
 #define PETROL_ENGINE_DEBUG
 #define DEBUG
 
-#include <PCH.h>
-#include "TerrainGenerator.h"
 #include <Core/Files.h>
-#include <modelLoader.h>
-#include <DebugTools.h>
+#include <Assimp/modelLoader.h>
+#include <Core/DebugTools.h>
 
-#include "Renderer/OpenGL/OpenGL.h"
+#include "OpenGL/OpenGL.h"
+#include <Bullet.h>
+#include "Freetype/Renderer/Text.h"
 
-#include "Renderer/Renderer/Renderer.h"
-#include "Renderer/Renderer/Text.h"
+#include <GLFW/GLFW.h>
 
-#include "Core/GLFW/GLFW.h"
+#include "TestRotationScript.h"
+#include <Core/Components/Material.h>
+#include <Core/Components/Movement.h>
+#include <Core/Components/Entity.h>
+#include <Core/Renderer/Renderer.h>
+#include <Core/Window/Window.h>
+#include <Core/Scene.h>
 
-#include "Core/Window/Window.h"
+#include "TerrainGenerator.h"
+#include <OpenAL/Sound/Sound.h>
 
-#include "Components/Material.h"
-#include "Components/Movement.h"
-#include "Components/TestRotationScript.h"
-#include <Renderer/Renderer/defaultShaders.h>
-#include <Scene.h>
-#include "Components/Entity.h"
-#include <Utils/Benchmarker.h>
-#include <Sound/Sound.h>
-#include <Renderer/OpenGL/OpenGL.h>
-#include "Core/GLFW/GLFW.h"
+#include <Static/Renderer/defaultShaders.h>
+#include <Static/Renderer/Renderer.h>
+
+#include <thread>
+#include <ENet/Server.h>
+#include <ENet/Client.h>
+
+#include "GameClient.h"
+#include "GameServer.h"
 
 using namespace PetrolEngine;
 
 class Game {
 public:
-    Vector<Scene> scenes;
+    const char* ip;
+    int port;
 
-    Game();
+    UnorderedMap<String, Scene*> scenes;
+    
+    Game(const char* ip, int port);
 
     void gameLoop();
 };
@@ -43,9 +58,13 @@ public:
     Entity* entity;
     Entity* camera;
 };
+
 Player player;
 
-Game::Game() {
+Game::Game(const char* ip, int port) {
+    this->ip = ip;
+    this->port = port;
+
     Renderer::setContext(OpenGL);
     Window  ::setContext(GLFW);
 
@@ -54,7 +73,7 @@ Game::Game() {
     Sound   ::init();
     Text    ::init();
 
-    //Window::setIcon("../Hei/Resources/fuel_distributor64.png");
+    Window::setIcon("../Hei/Resources/fuel_distributor64.png");
 
     Image::flipImages(true);
 
@@ -79,14 +98,15 @@ Game::Game() {
 
     ModelLoader::Get().shader = basic;
 
-    Scene& scene = scenes.emplace_back<>();
+    this->scenes["Overworld"] = new Scene();
 
-    player.entity = scene.createGameObject("player");
-    player.camera = scene.createGameObject("Camera", player.entity);
+    player.entity = scenes["Overworld"]->createGameObject("player");
+    player.camera = scenes["Overworld"]->createGameObject("Camera", player.entity);
 
-//    auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
-    /*auto c = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
-    auto b = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", &scene);
+//auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
+    auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
+    auto c = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
+    auto b = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
 
     auto& kc = a->getComponent<Transform>();
     auto& ka = b->getComponent<Transform>();
@@ -96,38 +116,9 @@ Game::Game() {
     ka.rotation = glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)));
 
     b->addComponent<TestRotationScript>();
-    */
-    /*
-    class AKA {
-    public:
-        glm::vec3 position;
-        glm::vec2 tex;
-        glm::vec3 normal;
-    };
-
-    { LOG_SCOPE("vertex data");
-        static VertexData data;
-        data.changeLayout({
-            {"pos", ShaderDataType::Float3},
-            {"tex", ShaderDataType::Float2},
-            {"nor", ShaderDataType::Float3},
-        });
-
-        data.resize(100);
-        static AKA *akal = (AKA *) data.data;;
-
-        for(int i=0;i<100;i++){
-            data[i]["pos"] = glm::vec3(i, i+17, i-3);
-            data[i]["tex"] = glm::vec2(i*0.2, i*0.1);
-            data[i]["nor"] = glm::vec3(i*2, i*4, i);
-        }
-
-        std::cout<<akal[1].position.x<<std::endl;
-        std::cout<<akal[1].position.y<<std::endl;
-        std::cout<<akal[1].position.z<<std::endl;
-    }*/
 
     gameLoop();
+    //gameServer.join();
 }
 
 void Game::gameLoop() { LOG_FUNCTION();
@@ -135,6 +126,16 @@ void Game::gameLoop() { LOG_FUNCTION();
     auto& camera = player.camera->addComponent<  Camera >();
 
     auto& camMov = player.entity->addComponent<Movement>(&camera);
+    
+    // bpx
+    Image* stoneImg = Image::create("../Hei/Resources/Wood.png");
+    Ref<Texture> stoneTex = Renderer::createTexture(stoneImg);
+    auto  box    = scenes["Overworld"]->createGameObject("falling");
+    box->getComponent<Transform>().position = glm::vec3(0, 100, 0);
+    box->addComponent<BoxCollider>(1, false); //true
+    auto& boxMesh = box->addComponent<Mesh>(createCube());
+    boxMesh.material.shader = Renderer::loadShader("default");
+    boxMesh.material.textures.push_back(stoneTex);
 
     Renderer::setCamera(&camera);
 
@@ -147,30 +148,29 @@ void Game::gameLoop() { LOG_FUNCTION();
     //framebuffer->addAttachment(texture);
 //    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID());
 
-    for(auto& scene : scenes) scene.start();
     bool cursor = true;
 
     // terrain
-//    auto terrain = scenes[0].createGameObject("terrain");
-//
-//    Image* tex = Image::create("../Hei/Resources/Stone.png");
-//
-//    Material material;
-//
-//    auto frag = ReadFile("../Hei/Resources/Shaders/terrain.frag");
-//    auto vert = ReadFile("../Hei/Resources/Shaders/terrain.vert");
-//    material.shader = Renderer::loadShader("terrain", vert, frag);
-//    material.textures.push_back(Renderer::createTexture(tex));
-//
-//    delete tex;
-//
-//    auto terrainGenerator = Hei::TerrainGenerator(213, terrain);
-//    terrainGenerator.setMaterial(material);
-//    terrainGenerator.generateTerrainAround(glm::vec3(0, 0, 0), 2);
+    auto terrain = scenes["Overworld"]->createGameObject("terrain");
+/*
+    Image* tex = Image::create("../Hei/Resources/Stone.png");
 
+    Material material;
+
+    auto frag = ReadFile("../Hei/Resources/Shaders/terrain.frag");
+    auto vert = ReadFile("../Hei/Resources/Shaders/terrain.vert");
+    material.shader = Renderer::loadShader("terrain", vert, frag);
+    material.textures.push_back(Renderer::createTexture(tex));
+
+    delete tex;
+
+    auto terrainGenerator = Hei::TerrainGenerator(213, terrain);
+    terrainGenerator.setMaterial(material);
+    terrainGenerator.generateTerrainAround(glm::vec3(0, 0, 0), 2);
+*/
     // skybox
 
-    auto skybox = scenes[0].createGameObject("skybox");
+    auto skybox = scenes["Overworld"]->createGameObject("skybox");
     auto& skyMesh = skybox->addComponent<Mesh>(createCube());
 
     skyMesh.invertFaces();
@@ -185,8 +185,46 @@ void Game::gameLoop() { LOG_FUNCTION();
         ReadFile("../Hei/Resources/Shaders/skybox.frag")
     );
 
+    auto terraina = scenes["Overworld"]->createGameObject("terrain1");
+
+    Image* tex = Image::create("../Hei/Resources/Stone.png");
+
+    Material material;
+
+    auto frag = ReadFile("../Hei/Resources/Shaders/terrain.frag");
+    auto vert = ReadFile("../Hei/Resources/Shaders/terrain.vert");
+    material.shader = Renderer::loadShader("terrain", vert, frag);
+    material.textures.push_back(Renderer::createTexture(tex));
+
+
+    //Hei::GameLoader anie = Hei::GameLoader(terraina, material);
+    //anie.load("xd");
+    //anie.generateAround(glm::vec3(0,0,0), 2);
+    String username;
+    std::cin>>username;
+    GameClient client = GameClient(username, terrain, material, this->ip, this->port);
+    client.init();
+    bool gotChunk = false;
+    for(auto& scene : scenes) scene.second->start();
 //    Benchmarker benchmarker = Benchmarker();
+    /*
+    String adac;
+
+            for(int ix = -2; ix <= 2; ix++){
+                for(int iy = -2; iy <= 2; iy++){
+                    for(int iz = -2; iz <= 2; iz++){
+                        adac = "gc;";
+                        adac += toString(ix) + ";";
+                        adac += toString(iy) + ";";
+                        adac += toString(iz) + ";";
+                        client.send(ada);
+                    }
+                }
+            }*/
+    client.generateTerrain({0,0,0}, 2);
     while (!Window::shouldClose()) {
+        client.update();
+
         deltaXMousePos     = cursorXPos - previousXCursorPos;
         deltaYMousePos     = cursorYPos - previousYCursorPos;
         previousXCursorPos = cursorXPos;
@@ -201,10 +239,30 @@ void Game::gameLoop() { LOG_FUNCTION();
         Renderer::clear();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if( Window::isPressed(GLFW_KEY_ESCAPE) )
+        if( Window::isPressed(Keys::KeyEscape) )
             Window::close();
 
-        if (Window::isPressed(GLFW_KEY_R)) {
+
+        if(gotChunk == false &&  Window::isPressed(Keys::KeyH)){
+            client.generateTerrain({0,0,0}, 3);
+            /*String ada;
+
+            for(int ix = -2; ix <= 2; ix++){
+                for(int iy = -2; iy <= 2; iy++){
+                    for(int iz = -2; iz <= 2; iz++){
+                        ada = "gc;";
+                        ada += toString(ix) + ";";
+                        ada += toString(iy) + ";";
+                        ada += toString(iz) + ";";
+                        client.send(ada);
+                    }
+                }
+            }*/
+
+
+            gotChunk = true;
+        }
+        if (Window::isPressed(Keys::KeyR)) {
             auto shader = Renderer::loadShader("default");
 
             auto shad1 = ReadFile("../Hei/Resources/Shaders/shader.vert");
@@ -213,11 +271,11 @@ void Game::gameLoop() { LOG_FUNCTION();
             shader->recomplie(shad1, shad2);
         }
 
-        auto& kr = EventStack::getEvents<WindowI::KeyPressedEvent>();
+        auto& kr = EventStack::getEvents<WindowApi::KeyPressedEvent>();
         for (auto* w : kr) {
-            if(w->key == GLFW_KEY_M && !w->repeat) Sound::playSound("/home/samuel/Downloads/marcin.wav");
-            if(w->key == GLFW_KEY_C && !w->repeat) Window::showCursor(cursor = !cursor);
-            if(w->key == GLFW_KEY_P && !w->repeat) {
+            if(w->key == Keys::KeyM && !w->repeat) Sound::playSound("/home/samuel/Downloads/marcin.wav");
+            if(w->key == Keys::KeyC && !w->repeat) Window::showCursor(cursor = !cursor);
+            if(w->key == Keys::KeyP && !w->repeat) {
                 {
                     glm::quat r = camTra.rotation;
                     LOG("X : " + toString(r.x) + " Y : " + toString(r.y) + " Z : " + toString(r.z) + " W : " + toString(r.w), 1);
@@ -225,22 +283,22 @@ void Game::gameLoop() { LOG_FUNCTION();
                 glm::vec3 r = glm::degrees(glm::eulerAngles(camTra.rotation));
                 LOG("X : " + toString(r.x) + " Y : " + toString(r.y) + " Z : " + toString(r.z), 1);
             }
-            EventStack::popFront<WindowI::KeyPressedEvent>();
+            EventStack::popFront<WindowApi::KeyPressedEvent>();
         }
 
-        auto& wr = EventStack::getEvents<WindowI::WindowResizedEvent>();
+        auto& wr = EventStack::getEvents<WindowApi::WindowResizedEvent>();
         for (auto* w : wr) {
             camera.resolution = glm::vec2(w->data.width, w->data.height);
             camera.updatePerspective();
             Renderer::setViewport(0, 0, w->data.width, w->data.height);
             //Renderer::setViewport(w->data.width, w->data.height);
 
-            EventStack::popFront<WindowI::WindowResizedEvent>();
+            EventStack::popFront<WindowApi::WindowResizedEvent>();
         }
 
         //camMov.update(mainCamera);
 
-        for (auto& scene : scenes) scene.update();
+        for (auto& scene : scenes) scene.second->update();
 
         { LOG_SCOPE("D-F-R");
 //            Transform tran = Transform(
@@ -255,7 +313,8 @@ void Game::gameLoop() { LOG_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         //Renderer::renderFramebuffer(framebuffer);
-
+        auto tmpTra = camTra.getRelativeTransform();
+        client.movePlayer(tmpTra);
         EventStack::clear();
 
         Window::swapBuffers();
@@ -266,9 +325,37 @@ void Game::gameLoop() { LOG_FUNCTION();
     Sound::destroy();
     Text ::destroy();
 }
+//#define OnlyServer
+int main(int argc, char* argv[]) {
+    const char* ip = "localhost";
+    int port = 55555;
 
+    for(int i = 0; i < argc; i++){
+        if(strcmp(argv[i], "--ip"  ) == 0 && argc > i) ip = argv[i+1];
+        if(strcmp(argv[i], "--port") == 0 && argc > i) port = std::stoi(argv[i+1]);
+    }
 
-int main() {
-    Game a = Game();
+    std::cout<< "ip " << ip << " port " << port << std::endl;
+
+    auto serverFunc = [](int port){
+        auto server = GameServer(port);
+        server.init();
+        server.run();
+    };
+
+    std::thread* serverThread = nullptr;
+
+    if(strcmp(ip, "localhost") == 0)
+        serverThread = new std::thread(serverFunc, port);
+
+#ifndef OnlyServer
+    Game a = Game(ip, port);
+#endif
+
+    if(strcmp(ip, "localhost") == 0)
+        serverThread->join();
+
+    delete serverThread;
+
     return 0;
 }

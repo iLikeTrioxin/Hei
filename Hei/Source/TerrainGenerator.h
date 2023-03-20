@@ -1,42 +1,41 @@
 #pragma once
 
-#include "Components/Mesh.h"
-#include "MarchingCubes.h"
+#include "Core/Components/Material.h"
+#include "Core/Components/Mesh.h"
+#include "Core/Components/Entity.h"
 #include "Core/Logger.h"
+#include "Chunk.h"
+
+//#include "MarchingCubes.h"
 #include "PerlinNoise.hpp"
-#include "Components/Entity.h"
-
-struct Vec3Hash {
-    size_t operator()(const glm::vec3& k) const {
-        return std::hash<float>()(k.x) ^ std::hash<float>()(k.y) ^ std::hash<float>()(k.z);
-    }
-
-    bool operator()(const glm::vec3& a, const glm::vec3& b) const {
-        return a.x == b.x && a.y == b.y && a.z == b.z;
-    }
-};
 
 namespace Hei {
-    using namespace PetrolEngine;
+    using namespace PetrolEngine; 
 
-    class TerrainGenerator {
+    class GameLoader {
     public:
-        TerrainGenerator(uint64 seed, Entity* parent);
+        UnorderedMap<glm::ivec3, ChunkData*, Vec3Hash, Vec3Hash> chunks;
+        glm::ivec3 chunkSize = {16, 16, 16};
+        glm::ivec3 chunksInFile = {16, 16, 16};
+        int seed = 2137;
+        //Entity* parent;
+        siv::PerlinNoise perlin;
+        String path;
+        void load(String path);
+        void newSave(String name);
 
-        uint64 seed = 213;
-        Entity* generateChunk(glm::ivec3 offset);
-        void generateTerrainAround(glm::vec3 position, int radius);
+        glm::ivec3 worldToOffset(glm::vec3 pos) { return glm::ivec3(pos) / chunkSize; } ;
+        ChunkData* getChunk(glm::ivec3 offset);
+        void generateChunk(glm::ivec3 offset, int level);
 
-        Material material;
-        void setMaterial(Material material) {
-            this->material = material;
+        void generateAround(glm::vec3 pos, int radius);    
+
+        GameLoader(){
+            //this->parent = parent;
+            perlin = siv::PerlinNoise(seed);
         }
 
-    private:
-        Entity* parent = nullptr;
-        UnorderedMap<glm::vec3, Entity*, Vec3Hash, Vec3Hash> chunks;
-
-        glm::ivec3 chunkSize = {16, 16, 16};
-        siv::PerlinNoise perlin;
+        //ChunkData loadChunk(glm::ivec3 offset);
     };
+
 }
