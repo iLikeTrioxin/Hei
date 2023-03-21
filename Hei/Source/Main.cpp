@@ -73,17 +73,17 @@ Game::Game(const char* ip, int port) {
     Sound   ::init();
     Text    ::init();
 
-    Window::setIcon("../Hei/Resources/fuel_distributor64.png");
+    Window::setIcon("Resources/fuel_distributor64.png");
 
     Image::flipImages(true);
 
-    Text::loadFont("../Hei/Resources/Fonts/xd.ttf");
+    Text::loadFont("Resources/Fonts/xd.ttf");
     //Text::loadFont("Arial")
 
     Window::setVSync(false);
 
-    String basicVertexShader   = ReadFile("../Hei/Resources/Shaders/shader.vert");
-    String basicFragmentShader = ReadFile("../Hei/Resources/Shaders/shader.frag");
+    String basicVertexShader   = ReadFile("Resources/Shaders/shader.vert");
+    String basicFragmentShader = ReadFile("Resources/Shaders/shader.frag");
     Ref<Shader> basic = Renderer::loadShader("default", defaultVertexShader, defaultFragmentShader);
 
     basic->setInt  ("material.diffuse"  , 0  );
@@ -104,9 +104,9 @@ Game::Game(const char* ip, int port) {
     player.camera = scenes["Overworld"]->createGameObject("Camera", player.entity);
 
 //auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
-    auto a = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
-    auto c = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
-    auto b = ModelLoader::loadModel("../Hei/Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
+    auto a = ModelLoader::loadModel("Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
+    auto c = ModelLoader::loadModel("Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
+    auto b = ModelLoader::loadModel("Resources/Models/Devildom girl/girl.fbx", scenes["Overworld"]);
 
     auto& kc = a->getComponent<Transform>();
     auto& ka = b->getComponent<Transform>();
@@ -128,7 +128,7 @@ void Game::gameLoop() { LOG_FUNCTION();
     auto& camMov = player.entity->addComponent<Movement>(&camera);
     
     // bpx
-    Image* stoneImg = Image::create("../Hei/Resources/Wood.png");
+    Image* stoneImg = Image::create("Resources/Wood.png");
     Ref<Texture> stoneTex = Renderer::createTexture(stoneImg);
     auto  box    = scenes["Overworld"]->createGameObject("falling");
     box->getComponent<Transform>().position = glm::vec3(0, 100, 0);
@@ -177,22 +177,22 @@ void Game::gameLoop() { LOG_FUNCTION();
     skyMesh.recalculateMesh();
 
     auto skyboxTexture = Renderer::createTexture(0, 0, TextureFormat::RGBA8, TextureType::TextureCube);
-    skyboxTexture->hejka("../Hei/Resources/FS000_Night_02_Moonless.png");
+    skyboxTexture->hejka("Resources/FS000_Night_02_Moonless.png");
 
     skyMesh.material.textures.push_back(skyboxTexture);;
     skyMesh.material.shader = Renderer::loadShader("skybox",
-        ReadFile("../Hei/Resources/Shaders/skybox.vert"),
-        ReadFile("../Hei/Resources/Shaders/skybox.frag")
+        ReadFile("Resources/Shaders/skybox.vert"),
+        ReadFile("Resources/Shaders/skybox.frag")
     );
 
     auto terraina = scenes["Overworld"]->createGameObject("terrain1");
 
-    Image* tex = Image::create("../Hei/Resources/Stone.png");
+    Image* tex = Image::create("Resources/Stone.png");
 
     Material material;
 
-    auto frag = ReadFile("../Hei/Resources/Shaders/terrain.frag");
-    auto vert = ReadFile("../Hei/Resources/Shaders/terrain.vert");
+    auto frag = ReadFile("Resources/Shaders/terrain.frag");
+    auto vert = ReadFile("Resources/Shaders/terrain.vert");
     material.shader = Renderer::loadShader("terrain", vert, frag);
     material.textures.push_back(Renderer::createTexture(tex));
 
@@ -265,15 +265,15 @@ void Game::gameLoop() { LOG_FUNCTION();
         if (Window::isPressed(Keys::KeyR)) {
             auto shader = Renderer::loadShader("default");
 
-            auto shad1 = ReadFile("../Hei/Resources/Shaders/shader.vert");
-            auto shad2 = ReadFile("../Hei/Resources/Shaders/shader.frag");
+            auto shad1 = ReadFile("Resources/Shaders/shader.vert");
+            auto shad2 = ReadFile("Resources/Shaders/shader.frag");
 
             shader->recomplie(shad1, shad2);
         }
 
         auto& kr = EventStack::getEvents<WindowApi::KeyPressedEvent>();
         for (auto* w : kr) {
-            if(w->key == Keys::KeyM && !w->repeat) Sound::playSound("/home/samuel/Downloads/marcin.wav");
+            if(w->key == Keys::KeyM && !w->repeat) Sound::playSound("Resources/marcin.wav");
             if(w->key == Keys::KeyC && !w->repeat) Window::showCursor(cursor = !cursor);
             if(w->key == Keys::KeyP && !w->repeat) {
                 {

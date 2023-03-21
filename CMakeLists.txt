@@ -13,8 +13,8 @@ File(GLOB_RECURSE   HEADER_FILES Hei/Source/*.h   )
 File(GLOB_RECURSE RESOURCE_FILES Hei/Resources/*.*)
 
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O3")
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -lstdc++fs")
 #set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -lstdc++fs")
@@ -30,9 +30,9 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Hei FILES ${SOURCE_FILES} ${HEADER_FILES} ${RESOURCE_FILES})
 
 add_subdirectory(Deps)
-
+file(COPY Hei/Resources DESTINATION ${CMAKE_BINARY_DIR})
+message(STATUS "infomaj: ${CMAKE_BINARY_DIR}")
 add_executable(Hei ${SOURCE_FILES})
-message(STATUS "sdf: ${STATIC_LIBS}")
 target_link_libraries(Hei PUBLIC PetrolEngine ${STATIC_LIBS})
 target_include_directories(Hei PUBLIC ${PETROL_ENGINE_INCLUDE})
 
