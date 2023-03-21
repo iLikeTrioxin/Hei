@@ -38,6 +38,7 @@ glm::vec3 CalcSurfaceNormal(glm::vec3 tri1, glm::vec3 tri2, glm::vec3 tri3) {
 #    include <filesystem>
      namespace fs = std::filesystem;
 #  elif __has_include(<experimental/filesystem>)
+#    define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #    include <experimental/filesystem>
      namespace fs = std::experimental::filesystem;
 #  elif __has_include(<boost/filesystem.hpp>)
