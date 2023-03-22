@@ -29,6 +29,9 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O3")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Hei FILES ${SOURCE_FILES} ${HEADER_FILES} ${RESOURCE_FILES})
 
+# for entt
+add_compile_definitions(NOMINMAX)
+
 add_subdirectory(Deps)
 file(COPY Hei/Resources DESTINATION ${CMAKE_BINARY_DIR})
 message(STATUS "infomaj: ${CMAKE_BINARY_DIR}")

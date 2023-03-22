@@ -55,7 +55,7 @@ namespace Hei {
     }
 
     void GameLoader::newSave(String name){
-        String cwd = fs::current_path();
+        String cwd = fs::current_path().string();
         String cmd = "mkdir " + cwd + "/saves";
 /*
         for3D(cloudSize.x, cloudSize.y, cloudSize.z) {
