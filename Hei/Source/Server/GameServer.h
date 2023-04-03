@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Core/Aliases.h"
-#include "TerrainGenerator.h"
-#include "TerrainRenderer.h"
+#include "../TerrainGenerator.h"
+#include "../TerrainRenderer.h"
 #include <ENet/Server.h>
-#include "Chunk.h"
+#include "../Chunk.h"
 
-namespace PetrolEngine {
+namespace Hei {
     class GameServer: public Server {
     public:
         struct Player {
@@ -46,9 +46,13 @@ namespace PetrolEngine {
             }
     
             if(parts[0] == "gc"){ 
-                int x = stoi(parts[1]);
-                int y = stoi(parts[2]);
-                int z = stoi(parts[3]);
+                int cx = stoi(parts[1]);
+                int cy = stoi(parts[2]);
+                int cz = stoi(parts[3]);
+                
+                int x = stoi(parts[4]);
+                int y = stoi(parts[5]);
+                int z = stoi(parts[6]);
 
                 String resp = "gcr;";
 

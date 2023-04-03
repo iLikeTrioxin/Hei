@@ -5,9 +5,13 @@
 #include "Core/Components/Entity.h"
 #include "TerrainRenderer.h"
 
-namespace PetrolEngine {
+using namespace PetrolEngine;
+
+namespace Hei {
+/*
     class GameClient: public Client {
     public:
+        String version;
         String name;
         TerrainManager* terrainManager = nullptr;
         //Entity* parent;
@@ -17,9 +21,11 @@ namespace PetrolEngine {
         }
         
         void generateTerrain(glm::vec3 pos, int radius);
-
+        
+        void dispatchEvents();
         void movePlayer(Transform& t);
         void onConnect();
         void onRecive(String& msg);
     };
+    */
 }

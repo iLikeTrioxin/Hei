@@ -1,16 +1,10 @@
+#include "../Server/GameServer.h"
 #include <cstring>
-#include <string>
-#define PETROL_ENGINE_DEBUG
-#define DEBUG
-
+#include <iostream>
 #include <thread>
-
-#include "Server/GameServer.h"
-#include "Game.h"
 
 using namespace PetrolEngine;
 
-//#define OnlyServer
 int main(int argc, char* argv[]) {
     const char* ip = "localhost";
     int port = 55555;
@@ -23,7 +17,7 @@ int main(int argc, char* argv[]) {
     std::cout<< "ip " << ip << " port " << port << std::endl;
 
     auto serverFunc = [](int port){
-        auto server = Hei::GameServer(port);
+        auto server = GameServer(port);
         server.init();
         server.run();
     };
@@ -32,12 +26,6 @@ int main(int argc, char* argv[]) {
 
     if(strcmp(ip, "localhost") == 0)
         serverThread = new std::thread(serverFunc, port);
-
-#ifndef OnlyServer
-    String username;
-    std::cin>>username;
-    Hei::Game a = Hei::Game(username, ip, port);
-#endif
 
     if(strcmp(ip, "localhost") == 0)
         serverThread->join();

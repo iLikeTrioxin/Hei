@@ -2,10 +2,12 @@
 
 #include <Core/Aliases.h>
 #include "Chunk.h"
-#include "Core/Components/Entity.h"
-#include "Core/Components/Material.h"
+#include <Core/Components/Entity.h>
+#include <Core/Components/Material.h>
 
-namespace PetrolEngine {
+using namespace PetrolEngine;
+
+namespace Hei {
     class TerrainManager {
         class Chunk{
         public:
@@ -34,7 +36,7 @@ namespace PetrolEngine {
         Material material;
         Vector<Vector<Vector<Chunk>>> chunksData;
         glm::ivec3 chunkSize = {16,16,16};
-        void renderChunk(ChunkData* chunk);
+        void renderChunk(ChunkData* chunk, glm::ivec3 center);
         void renderChunkI(Chunk* chunk);
         Entity* parent;
     };

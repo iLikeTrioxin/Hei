@@ -13,7 +13,7 @@ struct Vec3Hash {
     }
 };
 
-namespace PetrolEngine {
+namespace Hei {
     struct BlockData {
         uint8 id;
 

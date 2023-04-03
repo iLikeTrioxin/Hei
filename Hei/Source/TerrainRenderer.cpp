@@ -13,7 +13,7 @@ static glm::vec3 CalcSurfaceNormal(glm::vec3 tri1, glm::vec3 tri2, glm::vec3 tri
 }
 
 
-namespace PetrolEngine {
+namespace Hei {
 
     void TerrainManager::addChunk(){
         
@@ -33,11 +33,13 @@ namespace PetrolEngine {
         }
     }
 
-    void TerrainManager::renderChunk(ChunkData *chunk){
-        auto offset = chunk->offset + (chunkSize / 2);
+    void TerrainManager::renderChunk(ChunkData *chunk, glm::ivec3 center){
+        auto offset = chunk->offset + (chunkSize / 2) - center;
 
         auto& current = chunksData[offset.x][offset.y][offset.z];
         
+        if(current.data != nullptr) return;
+
         current.data = chunk;
 
         if(offset.x < chunksData.size() - 1) chunksData[offset.x + 1][offset.y + 0][offset.z + 0].sides++;

@@ -1,12 +1,20 @@
 #include "GameClient.h"
 #include "Chunk.h"
-#include "Core/Aliases.h"
-#include "Core/Components/Mesh.h"
-#include "Static/Renderer/Renderer.h"
+
+#include <Core/Aliases.h>
+#include <Core/Components/Mesh.h>
+#include <Core/EventStack.h>
+#include <Static/Renderer/Renderer.h>
 #include <Core/Components/Entity.h>
+
+#include "Events.h"
+#include "Movement.h"
 #include <cmath>
 
-namespace PetrolEngine{
+using namespace PetrolEngine;
+
+namespace Hei {
+    /*
     UnorderedMap<String, Entity*> players;
 
     void GameClient::onConnect(){
@@ -15,19 +23,29 @@ namespace PetrolEngine{
         send(cmd);
     }
 
+    void GameClient::dispatchEvents(){
+        auto& toSend = EventStack::getEvents<RequestNetwork>();
+
+        for(auto& event : toSend) send(event->cmd);
+
+        auto& events = EventStack::getEvents<PlayerMovedNetwork>();
+
+        for(auto& event : events) movePlayer(*event->player);
+    }
+
     void GameClient::movePlayer(Transform& t){
-        String cmd = "pm;";
-        cmd += this->name + ";";
+        String cmd = "pm;" + this->name + ";";
 
         cmd += toString(t.position.x) + ";";
         cmd += toString(t.position.y) + ";";
         cmd += toString(t.position.z) + ";";
 
-        auto rotation = t.getRotation();
+        auto& rotation = t.rotation;
 
         cmd += toString(rotation.x) + ";";
         cmd += toString(rotation.y) + ";";
         cmd += toString(rotation.z) + ";";
+        cmd += toString(rotation.w) + ";";
 
         send(cmd);
     }
@@ -54,27 +72,27 @@ namespace PetrolEngine{
         for(auto& e : vec) {
             cmd = "gc;";
 
+            cmd += toString(pos.x) + ";";
+            cmd += toString(pos.y) + ";";
+            cmd += toString(pos.z) + ";";
+
             cmd += toString(e.second.x) + ";";
             cmd += toString(e.second.y) + ";";
             cmd += toString(e.second.z) + ";";
-            std::cout<<cmd<<std::endl;
+            
             send(cmd);
         }
     }
 
     void GameClient::onRecive(String& msg){
         Vector<String> parts = split(msg, ';');
-        
-        if(parts[0] == "npi"){
-             
-        }
 
         if(parts[0] == "np"){
             String name = parts[1];
             
             if(this->name == name) return;
 
-            Image* stoneImg = Image::create("../Hei/Resources/Wood.png");
+            Image* stoneImg = Image::create("Resources/Wood.png");
             Ref<Texture> stoneTex = Renderer::createTexture(stoneImg);
     
             players[name] = terrainManager->parent->getScene()->createGameObject(name.c_str());
@@ -89,21 +107,24 @@ namespace PetrolEngine{
             if(this->name == name) return;
             if(players.find(name) == players.end()) return;
 
+            auto& transform = players[name]->getComponent<Transform>();
+            
             glm::vec3 pos;
-            glm::vec3 rot;
-
+            auto&     rot = transform.rotation;
+            
             pos.x = stof(parts[2]);
             pos.y = stof(parts[3]);
             pos.z = stof(parts[4]);
+            
+            transform.setPosition(pos);
 
             rot.x = stof(parts[5]);
             rot.y = stof(parts[6]);
             rot.z = stof(parts[7]);
-            
-            auto& transform = players[name]->getComponent<Transform>();
-            
-            transform.setPosition(pos);
-            transform.setRotation(rot);
+            rot.w = stof(parts[8]);
+        
+            transform.updateOrientation();
+            transform.updateTransformMatrix();
         }
 
         if(parts[0] == "gcr"){
@@ -123,8 +144,9 @@ namespace PetrolEngine{
                     }
                 }
             }
-
-            terrainManager->renderChunk(data);
+            
+            EventStack::addEvent(new GotChunkNetwork(data));
         }
     }
+*/
 }
