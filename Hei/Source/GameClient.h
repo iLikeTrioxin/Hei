@@ -8,24 +8,35 @@
 using namespace PetrolEngine;
 
 namespace Hei {
-/*
+    class World: public Scene {
+    public:
+        TerrainManager* terrain = nullptr;
+        
+    };
+    
+    class Player {
+    public:
+        GameObject* entity;
+        GameObject* camera;
+    };
+
     class GameClient: public Client {
     public:
-        String version;
-        String name;
-        TerrainManager* terrainManager = nullptr;
-        //Entity* parent;
-        GameClient(String name, Entity* parent, Material material, const char* ip, int port): Client(ip, port) {
-            terrainManager = new TerrainManager(parent, material);
-            this->name = name;
-        }
+        const String version = "0.0.1";
+        String username;
+        Player player;
+    
+    public:
+        UnorderedMap<String, World*> worlds;
+        World* world;
         
-        void generateTerrain(glm::vec3 pos, int radius);
-        
-        void dispatchEvents();
-        void movePlayer(Transform& t);
+        Game(String username, const char* ip, int port);
+    
         void onConnect();
         void onRecive(String& msg);
+        void dispatchEvents(); 
+        void generateTerrain(glm::vec3 pos, int radius);
+        void movePlayer(Transform& tran);
+        void gameLoop();
     };
-    */
 }
