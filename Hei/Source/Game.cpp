@@ -16,5 +16,15 @@
 #include "Events.h"
 
 namespace Hei {
-    
+    Game::Game(){
+        std::string username;
+        std::cout<<"Username: ";
+        std::cin>>username;
+        std::cout<<std::endl;
+        this->game = new GameClient(username, "127.0.0.1", 55555);
+    }
+
+    Game::~Game(){
+        delete this->game;
+    }
 }

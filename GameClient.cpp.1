@@ -2,20 +2,10 @@
 #include "Chunk.h"
 
 #include <Core/Aliases.h>
+#include <Core/Components/Mesh.h>
 #include <Core/EventStack.h>
-#include <Core/GameObject.h>
-
-#include <Core/Components/Entity.h>
-
-#include <Static/Renderer/defaultShaders.h>
 #include <Static/Renderer/Renderer.h>
-#include <Static/Window/Window.h>
-
-#include <OpenAL/Sound/Sound.h>
-#include <OpenGL/OpenGL.h>
-#include <GLFW/GLFW.h>
-
-#include <Assimp/modelLoader.h>
+#include <Core/Components/Entity.h>
 
 #include "Events.h"
 #include "Movement.h"
@@ -79,14 +69,14 @@ namespace Hei {
         auto& camMov = player.entity->addComponent<Movement>(&camera);
         
         // bpx
-        //Image* stoneImg = Image::create("Resources/Wood.png");
-        Ref<Texture> stoneTex = Renderer::createTexture("Resources/Wood.png");
+        Image* stoneImg = Image::create("Resources/Wood.png");
+        Ref<Texture> stoneTex = Renderer::createTexture(stoneImg);
         auto  box    = worlds["Overworld"]->createGameObject("falling");
         box->getComponent<Transform>().position = glm::vec3(0, 100, 0);
         box->addComponent<BoxCollider>(1, false); //true
         auto& boxMesh = box->addComponent<Mesh>(createCube());
-        boxMesh.meshRenderer->material.shader = Renderer::loadShader("default");
-        boxMesh.meshRenderer->material.textures.push_back(stoneTex);
+        boxMesh.material.shader = Renderer::loadShader("default");
+        boxMesh.material.textures.push_back(stoneTex);
     
         Renderer::setCamera(&camera);
     
@@ -114,25 +104,25 @@ namespace Hei {
         auto skyboxTexture = Renderer::createTexture(0, 0, TextureFormat::RGBA8, TextureType::TextureCube);
         skyboxTexture->hejka("Resources/FS000_Night_02_Moonless.png");
     
-        skyMesh.meshRenderer->material.textures.push_back(skyboxTexture);;
-        skyMesh.meshRenderer->material.shader = Renderer::loadShader("skybox",
+        skyMesh.material.textures.push_back(skyboxTexture);;
+        skyMesh.material.shader = Renderer::loadShader("skybox",
             ReadFile("Resources/Shaders/skybox.vert"),
             ReadFile("Resources/Shaders/skybox.frag")
         );
     
         auto terraina = worlds["Overworld"]->createGameObject("terrain1");
     
-        //Image* tex = Image::create("Resources/Stone.png");
+        Image* tex = Image::create("Resources/Stone.png");
     
         Material material;
     
         auto frag = ReadFile("Resources/Shaders/terrain.frag");
         auto vert = ReadFile("Resources/Shaders/terrain.vert");
         material.shader = Renderer::loadShader("terrain", vert, frag);
-        material.textures.push_back(Renderer::createTexture("Resources/Stone.png"));
+        material.textures.push_back(Renderer::createTexture(tex));
     
         bool gotChunk = false;
-        for(auto& world : worlds) world.second->start();
+        for(auto& scene : scenes) scene.second->start();
     //    Benchmarker benchmarker = Benchmarker();
     
         glm::ivec3 lastChunkOffset = glm::ivec3(0,0,0);
@@ -271,7 +261,7 @@ namespace Hei {
 
         Vector<Pair<float, glm::ivec3>> vec;
         
-        auto& chunkSize = world->terrain->chunkSize;
+        auto& chunkSize = terrain->chunkSize;
         for(int ix = -radius; ix <= radius; ix++){
         for(int iy = -radius; iy <= radius; iy++){
         for(int iz = -radius; iz <= radius; iz++){
@@ -308,13 +298,13 @@ namespace Hei {
             
             if(this->username == name) return;
 
-            // Image* stoneImg = Image::create("Resources/Wood.png");
-            Ref<Texture> stoneTex = Renderer::createTexture("Resources/Wood.png");
+            Image* stoneImg = Image::create("Resources/Wood.png");
+            Ref<Texture> stoneTex = Renderer::createTexture(stoneImg);
     
             players[name] = world->terrain->parent->getScene()->createGameObject(name.c_str());
             auto& mesh = players[name]->addComponent<Mesh>(createCube());
-            mesh.meshRenderer->material.shader = Renderer::loadShader("default");
-            mesh.meshRenderer->material.textures.push_back(stoneTex);
+            mesh.material.shader = Renderer::loadShader("default");
+            mesh.material.textures.push_back(stoneTex);
         }
 
         if(parts[0] == "pm"){
@@ -350,7 +340,7 @@ namespace Hei {
             int offsetY = stoi(parts[3]);
             int offsetZ = stoi(parts[4]);
             
-            auto& chunkSize = this->world->terrain->chunkSize;
+            auto& chunkSize = world->chunkSize;
             ChunkData*data=new ChunkData(chunkSize, glm::ivec3(offsetX, offsetY, offsetZ));
 
             int i = 0;
@@ -362,7 +352,7 @@ namespace Hei {
                     }
                 }
             }
-            //worlds[world]->terrain.renderChunk(data, glm::ivec3 center);
+            worlds[world]->terrain.renderChunk(data, glm::ivec3 center);
             //EventStack::addEvent(new GotChunkNetwork(data));
         }
     }

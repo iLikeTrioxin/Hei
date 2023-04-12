@@ -30,7 +30,7 @@ namespace Hei {
         UnorderedMap<String, World*> worlds;
         World* world;
         
-        Game(String username, const char* ip, int port);
+        GameClient(String username, const char* ip, int port);
     
         void onConnect();
         void onRecive(String& msg);

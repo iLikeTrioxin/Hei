@@ -83,11 +83,11 @@ namespace Hei {
         
         auto offset = chunk->data->offset + iv3(chunkSize / 2);
 
-        chunk->entity = parent->getScene()->createGameObject("Chunk", parent);
+        chunk->entity = (Entity*)parent->getScene()->createGameObject("Chunk", parent);
         auto& transform = chunk->entity->getComponent<PetrolEngine::Transform>();
         transform.setPosition(glm::vec3(chunk->data->offset * chunkSize) / 2.f);
         Mesh& mesh = chunk->entity->addComponent<Mesh>();
-        mesh.material = this->material;
+        mesh.meshRenderer->material = this->material;
 
         auto addFace = [&](int i, glm::vec3 p){
             int x = mesh.vertices.size();

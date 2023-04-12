@@ -35,14 +35,19 @@ add_compile_definitions(NOMINMAX)
 
 add_subdirectory(Deps)
 
-
-
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/${HEI_BUILD_NAME}>)
 
 file(COPY Hei/Resources DESTINATION ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/${HEI_BUILD_NAME})
 
 add_executable(Hei ${SOURCE_FILES})
+
+#target_compile_features(PetrolEngine PUBLIC cxx_std_23)
+#target_compile_features(Hei PUBLIC cxx_std_23)
+
+
 target_link_libraries(Hei PUBLIC PetrolEngine ${STATIC_LIBS})
 target_include_directories(Hei PUBLIC ${PETROL_ENGINE_INCLUDE})
 

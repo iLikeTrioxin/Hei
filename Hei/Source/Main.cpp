@@ -12,7 +12,7 @@ using namespace PetrolEngine;
 
 //#define OnlyServer
 int main(int argc, char* argv[]) {
-    const char* ip = "localhost";
+    const char* ip = "127.0.0.1";
     int port = 55555;
 
     for(int i = 0; i < argc; i++){
@@ -34,9 +34,7 @@ int main(int argc, char* argv[]) {
         serverThread = new std::thread(serverFunc, port);
 
 #ifndef OnlyServer
-    String username;
-    std::cin>>username;
-    Hei::Game a = Hei::Game(username, ip, port);
+    Hei::Game a = Hei::Game();
 #endif
 
     if(strcmp(ip, "localhost") == 0)
