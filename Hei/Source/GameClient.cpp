@@ -11,10 +11,12 @@
 #include <Static/Renderer/Renderer.h>
 #include <Static/Window/Window.h>
 
+#include <Core/Physics/Collider.h>
+#include <Bullet/src/Bullet.h>
 #include <OpenAL/Sound/Sound.h>
 #include <OpenGL/OpenGL.h>
 #include <GLFW/GLFW.h>
-
+#include <Linus/Linus.h>
 #include <Assimp/modelLoader.h>
 
 #include "Events.h"
@@ -29,7 +31,7 @@ namespace Hei {
         Renderer::setContext(OpenGL);
         Window  ::setContext(GLFW);
     
-        Window  ::init(800, 600, "Hei");
+        Window  ::init(1280, 720, "Hei"); // 800 600
         Renderer::init(true);
         Sound   ::init();
         Text    ::init();
@@ -77,13 +79,14 @@ namespace Hei {
         auto& camera = player.camera->addComponent<  Camera >();
     
         auto& camMov = player.entity->addComponent<Movement>(&camera);
-        
+        BulletCreator a;
+        player.entity->addComponent<PhysicsController3D>(&a);
         // bpx
         //Image* stoneImg = Image::create("Resources/Wood.png");
         Ref<Texture> stoneTex = Renderer::createTexture("Resources/Wood.png");
         auto  box    = worlds["Overworld"]->createGameObject("falling");
         box->getComponent<Transform>().position = glm::vec3(0, 100, 0);
-        box->addComponent<BoxCollider>(1, false); //true
+        box->addComponent<BoxCollider3D>(1, false); //true
         auto& boxMesh = box->addComponent<Mesh>(createCube());
         boxMesh.meshRenderer->material.shader = Renderer::loadShader("default");
         boxMesh.meshRenderer->material.textures.push_back(stoneTex);
@@ -206,13 +209,13 @@ namespace Hei {
             for (auto& world : worlds) world.second->update();
     
             { LOG_SCOPE("D-F-R");
-    //            Transform tran = Transform(
-    //                {10.f, 475.f, 0.f},
-    //                {.1f, .1f, .1f}
-    //            );
-    //
-    //            tran.position = glm::vec3(0, 0, 0);
-    //            Renderer::renderText(".1% LOW FPS: " + toString(1.0 / deltaTime), tran, "../Hei/Resources/Fonts/xd.ttf");
+                Transform tran = Transform(
+                    {10.f, 475.f, 0.f},
+                    {.1f, .1f, .1f}
+                );
+    
+                tran.position = glm::vec3(0, 0, 0);
+                Renderer::renderText(".1% LOW FPS: " + toString(1.0 / deltaTime), tran, "Resources/Fonts/xd.ttf");
             }
     
             glBindFramebuffer(GL_FRAMEBUFFER, 0);

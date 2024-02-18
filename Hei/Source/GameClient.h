@@ -2,9 +2,8 @@
 
 #include <ENet/Client.h>
 #include <Core/Aliases.h>
-#include "Core/Components/Entity.h"
+#include <Core/Components/Entity.h>
 #include "TerrainRenderer.h"
-
 using namespace PetrolEngine;
 
 namespace Hei {

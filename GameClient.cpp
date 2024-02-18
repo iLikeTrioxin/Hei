@@ -6,6 +6,7 @@
 #include <Core/EventStack.h>
 #include <Static/Renderer/Renderer.h>
 #include <Core/Components/Entity.h>
+#include <Core/Physics/Collider.h>
 
 #include "Events.h"
 #include "Movement.h"
@@ -69,11 +70,12 @@ namespace Hei {
         auto& camMov = player.entity->addComponent<Movement>(&camera);
         
         // bpx
+        //volatile auto xax = BoxCollider(1, false);
         Image* stoneImg = Image::create("Resources/Wood.png");
         Ref<Texture> stoneTex = Renderer::createTexture(stoneImg);
         auto  box    = worlds["Overworld"]->createGameObject("falling");
         box->getComponent<Transform>().position = glm::vec3(0, 100, 0);
-        box->addComponent<BoxCollider>(1, false); //true
+        box->addComponent<int>(1); //true
         auto& boxMesh = box->addComponent<Mesh>(createCube());
         boxMesh.material.shader = Renderer::loadShader("default");
         boxMesh.material.textures.push_back(stoneTex);
