@@ -7,6 +7,7 @@
 using namespace PetrolEngine;
 
 namespace Hei {
+    extern bool cursor;
     class World: public Scene {
     public:
         TerrainManager* terrain = nullptr;

@@ -24,9 +24,9 @@ namespace Hei {
         for(int ix = 0; ix < this->chunksData.size(); ix++) {
             for(int iy = 0; iy < this->chunksData[ix].size(); iy++){
                 for(int iz = 0; iz < this->chunksData[ix][iy].size(); iz++){
-                    if(this->chunksData[ix][iy][iz].sides   <       6) continue;
+                    //if(this->chunksData[ix][iy][iz].sides   <       6) continue;
                     if(this->chunksData[ix][iy][iz].entity != nullptr) continue;
-
+                    
                     renderChunkI(&this->chunksData[ix][iy][iz]);
                 }
             }
@@ -41,7 +41,7 @@ namespace Hei {
         if(current.data != nullptr) return;
 
         current.data = chunk;
-
+        
         if(offset.x < chunksData.size() - 1) chunksData[offset.x + 1][offset.y + 0][offset.z + 0].sides++;
         if(offset.y < chunksData.size() - 1) chunksData[offset.x + 0][offset.y + 1][offset.z + 0].sides++;
         if(offset.z < chunksData.size() - 1) chunksData[offset.x + 0][offset.y + 0][offset.z + 1].sides++;

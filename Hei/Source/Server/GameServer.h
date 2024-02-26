@@ -24,10 +24,10 @@ namespace Hei {
         
         virtual void onRecive(Peer& client, String& msg){
             Vector<String> parts = split(msg, ';');
+                LOG(msg, 3); 
     
             if(parts[0] == "wj"){
                 String resp = "np;"; // new player
-    
                 resp += parts[1] + ";"; // username
                 
                 this->broadcast(resp);
@@ -55,6 +55,7 @@ namespace Hei {
                 int z = stoi(parts[6]);
 
                 String resp = "gcr;";
+                std::cout<<"chunk request recived!;\n";
 
                 resp += toString(x) + ";";
                 resp += toString(y) + ";";

@@ -7,7 +7,7 @@
 #include <Static/Renderer/Renderer.h>
 #include <Core/Components/Entity.h>
 #include <Core/Physics/Collider.h>
-
+#include <ImGui/ImGui.h>
 #include "Events.h"
 #include "Movement.h"
 #include <cmath>
@@ -24,6 +24,7 @@ namespace Hei {
         Renderer::init(true);
         Sound   ::init();
         Text    ::init();
+        ImGui::init();
         
         Window::setIcon("Resources/fuel_distributor64.png");
     

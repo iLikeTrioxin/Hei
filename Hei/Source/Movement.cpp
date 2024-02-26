@@ -5,7 +5,7 @@
 #include "Movement.h"
 #include <Core/Components/Camera.h>
 #include <Static/Window/Window.h>
-
+#include "GameClient.h"
 using namespace PetrolEngine;
 
 namespace Hei {
@@ -21,9 +21,10 @@ namespace Hei {
         if (Window::isPressed(Keys::KeyA)) transform->position -= camera->transform->right   * distance;
         if (Window::isPressed(Keys::KeyD)) transform->position += camera->transform->right   * distance;
 
+        if(!cursor){
                 transform->rotateY((float) -(deltaXMousePos * 0.005));
         camera->transform->rotateX((float) -(deltaYMousePos * 0.005));
-
+        }
         glm::vec3 angles = eulerAngles(camera->transform->rotation);
 
         if (angles.x >  1.5f) camera->transform->setRotationX( 1.5f);

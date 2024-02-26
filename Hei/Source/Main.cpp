@@ -13,7 +13,7 @@ using namespace PetrolEngine;
 
 // #define OnlyServer
 int main(int argc, char *argv[]) {
-  const char *ip = "127.0.0.1";
+  const char *ip = "localhost";
   int port = 55555;
 
   for (int i = 0; i < argc; i++) {

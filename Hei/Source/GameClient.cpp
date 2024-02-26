@@ -18,9 +18,14 @@
 #include <GLFW/GLFW.h>
 #include <Linus/Linus.h>
 #include <Assimp/modelLoader.h>
+#include <ImGui/ImGui.h>
 
+#include "Core/Components/Properties.h"
+#include "Core/Components/Transform.h"
 #include "Events.h"
 #include "Movement.h"
+#include "TerrainRenderer.h"
+#include "imgui.h"
 #include <cmath>
 
 using namespace PetrolEngine;
@@ -35,7 +40,7 @@ namespace Hei {
         Renderer::init(true);
         Sound   ::init();
         Text    ::init();
-        
+        ImGuiLayer::init();
         Window::setIcon("Resources/fuel_distributor64.png");
     
         Image::flipImages(true);
@@ -71,10 +76,14 @@ namespace Hei {
         auto& kc = a->getComponent<Transform>();
         kc.position.x -= 10;
         
+
         gameLoop();
     }
 
+    bool cursor = true;
+
     void GameClient::gameLoop() { LOG_FUNCTION();
+        init();
         auto& camTra = player.camera->getComponent<Transform>();
         auto& camera = player.camera->addComponent<  Camera >();
     
@@ -102,7 +111,6 @@ namespace Hei {
         //framebuffer->addAttachment(texture);
     //    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID());
     
-        bool cursor = true;
     
         // terrain
         auto terrain = worlds["Overworld"]->createGameObject("terrain");
@@ -124,6 +132,7 @@ namespace Hei {
         );
     
         auto terraina = worlds["Overworld"]->createGameObject("terrain1");
+        auto terrainb = worlds["Overworld"]->createGameObject("terrain2", terraina);
     
         //Image* tex = Image::create("Resources/Stone.png");
     
@@ -140,9 +149,10 @@ namespace Hei {
     
         glm::ivec3 lastChunkOffset = glm::ivec3(0,0,0);
         auto& playerTransform = player.entity->getComponent<Transform>();
+        world->terrain = new TerrainManager(terrainb, material);
         //client.generateTerrain({0,0,0}, 2);
         while (!Window::shouldClose()) {
-            //client.update();
+            update();
             //client.dispatchEvents();
     
             deltaXMousePos     = cursorXPos - previousXCursorPos;
@@ -158,16 +168,18 @@ namespace Hei {
             LOG_SCOPE("Frame");
             Renderer::clear();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+            ImGuiLayer::clear();
             if( Window::isPressed(Keys::KeyEscape) )
                 Window::close();
-    
+   
+
+
     
             glm::ivec3 chunkOffset = glm::ivec3(playerTransform.position / 16.0f);
             if(chunkOffset != lastChunkOffset){
                 lastChunkOffset = chunkOffset;
-                std::cout<<"eeee jooo"<<std::endl;
-                //client.generateTerrain(lastChunkOffset, 2);
+                //std::cout<<"eeee jooo"<<std::endl;
+                //generateTerrain(lastChunkOffset, 2);
             }
             
             if (Window::isPressed(Keys::KeyR)) {
@@ -224,12 +236,13 @@ namespace Hei {
             auto tmpTra = camTra.getRelativeTransform();
             movePlayer(tmpTra);
             EventStack::clear();
-    
+            ImGuiLayer::draw();
             Window::swapBuffers();
             Window::pollEvents ();
     //        benchmarker.frameDone();
         }
-    
+        
+        ImGuiLayer::destroy();
         Sound::destroy();
         Text ::destroy();
     }
@@ -238,6 +251,7 @@ namespace Hei {
 
     void GameClient::onConnect(){
         String cmd = "wj;";
+        LOG("Connected to server!", 3);
         cmd += this->username + ";";
         send(cmd);
     }
@@ -271,6 +285,7 @@ namespace Hei {
 
     void GameClient::generateTerrain(glm::vec3 pos, int radius){
         radius += 1;
+        std::cout<<"chunk requested!\n";
 
         Vector<Pair<float, glm::ivec3>> vec;
         
@@ -347,11 +362,12 @@ namespace Hei {
         }
 
         if(parts[0] == "gcr"){
-            String& world = parts[1];
-
-            int offsetX = stoi(parts[2]);
-            int offsetY = stoi(parts[3]);
-            int offsetZ = stoi(parts[4]);
+            //String& world = parts[1];
+            
+            LOG(msg, 3);
+            int offsetX = stoi(parts[1]);
+            int offsetY = stoi(parts[2]);
+            int offsetZ = stoi(parts[3]);
             
             auto& chunkSize = this->world->terrain->chunkSize;
             ChunkData*data=new ChunkData(chunkSize, glm::ivec3(offsetX, offsetY, offsetZ));
@@ -365,7 +381,8 @@ namespace Hei {
                     }
                 }
             }
-            //worlds[world]->terrain.renderChunk(data, glm::ivec3 center);
+            std::cout<<"chunk recived!\n";
+            worlds["Overworld"]->terrain->renderChunk(data, {offsetX, offsetY, offsetZ});
             //EventStack::addEvent(new GotChunkNetwork(data));
         }
     }
