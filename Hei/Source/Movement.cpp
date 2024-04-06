@@ -11,7 +11,11 @@ using namespace PetrolEngine;
 namespace Hei {
     // Movement
     Movement::Movement(Camera* camera) :
-            camera (camera) {};
+            camera (camera) {
+                jes.push_back({10, 4, 2});
+                jes.push_back({1});
+                jes.push_back({5,3});
+            };
 
     void Movement::onUpdate() { LOG_FUNCTION();
         float distance = (Window::isPressed(Keys::KeyLeftShift) ? runSpeed : walkSpeed) * (float)deltaTime;

@@ -42,16 +42,24 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYP
 
 file(COPY Hei/Resources DESTINATION ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/${HEI_BUILD_NAME})
 
-add_executable(Hei ${SOURCE_FILES})
-
+add_executable(Hei ${SOURCE_FILES} ${HEADER_FILES})
+target_include_directories(Hei PRIVATE attrsIncludeDir)
 #target_compile_features(PetrolEngine PUBLIC cxx_std_23)
 #target_compile_features(Hei PUBLIC cxx_std_23)
 
+target_compile_options(Hei PUBLIC -fno-rtti)
+
+add_compile_definitions(HEI PUBLIC DEBUG)
 
 target_link_libraries(Hei PUBLIC PetrolEngine ${STATIC_LIBS})
 target_include_directories(Hei PUBLIC ${PETROL_ENGINE_INCLUDE})
+implement_attributes(Hei)
 
-if(UNIX)
+if(WIN32 OR MINGW OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows") )
+    target_compile_options(Hei PUBLIC -static -Wl,.)
+    target_link_libraries (Hei PUBLIC mingw32)
+    message("using MINGW!!! YAY!!! ${CMAKE_SYSTEM_NAME}")
+elseif(UNIX)
     target_link_libraries (Hei PUBLIC pthread dl)
     target_compile_options(Hei PUBLIC -Wl,-rpath -Wl,.)
 endif()

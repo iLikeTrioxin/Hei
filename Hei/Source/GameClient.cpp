@@ -16,18 +16,20 @@
 #include <OpenAL/Sound/Sound.h>
 #include <OpenGL/OpenGL.h>
 #include <GLFW/GLFW.h>
-#include <Linus/Linus.h>
+//#include <Linus/Linus.h>
 #include <Assimp/modelLoader.h>
 #include <ImGui/ImGui.h>
 
 #include "Core/Components/Properties.h"
 #include "Core/Components/Transform.h"
+#include "Core/DebugTools.h"
 #include "Events.h"
 #include "Movement.h"
-#include "TerrainRenderer.h"
+#include "TerrainGenerator.h"
+//#include "TerrainRenderer.h"
 #include "imgui.h"
 #include <cmath>
-
+#include <HeiAttributes.h>
 using namespace PetrolEngine;
 
 namespace Hei {
@@ -40,7 +42,7 @@ namespace Hei {
         Renderer::init(true);
         Sound   ::init();
         Text    ::init();
-        ImGuiLayer::init();
+        DEBUG_STATEMENT(ImGuiLayer::init());
         Window::setIcon("Resources/fuel_distributor64.png");
     
         Image::flipImages(true);
@@ -76,7 +78,6 @@ namespace Hei {
         auto& kc = a->getComponent<Transform>();
         kc.position.x -= 10;
         
-
         gameLoop();
     }
 
@@ -106,16 +107,18 @@ namespace Hei {
         double previousYCursorPos = cursorYPos;
         double previousFrame      = glfwGetTime();
     
-        Ref<Texture> texture = Renderer::createTexture(800, 600, TextureFormat::RGBA8);
-    //    Ref<Framebuffer> framebuffer = Renderer::createFramebuffer(FramebufferSpecification{800, 600});
-        //framebuffer->addAttachment(texture);
-    //    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID());
-    
+        Texture* texture = Renderer::newTexture(1280, 720, TextureFormat::RGB8);
+        Texture* textureD = Renderer::newTexture(1280, 720, TextureFormat::DEPTH24STENCIL8);
+        Ref<Framebuffer> framebuffer = Renderer::createFramebuffer(FramebufferSpecification{1280, 720});
+        framebuffer->addAttachment(texture);
+        framebuffer->addAttachment(textureD);
     
         // terrain
         auto terrain = worlds["Overworld"]->createGameObject("terrain");
+
+        //auto& generator = terrain->addComponent<TerrainGenerator>(2137);
+
         // skybox
-    
         auto skybox = worlds["Overworld"]->createGameObject("skybox");
         auto& skyMesh = skybox->addComponent<Mesh>(createCube());
     
@@ -130,29 +133,25 @@ namespace Hei {
             ReadFile("Resources/Shaders/skybox.vert"),
             ReadFile("Resources/Shaders/skybox.frag")
         );
+        GLuint RBO = 0;
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID());
+        glBindTexture(GL_TEXTURE_2D, texture->getID());
+        glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1280, 720);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
-        auto terraina = worlds["Overworld"]->createGameObject("terrain1");
-        auto terrainb = worlds["Overworld"]->createGameObject("terrain2", terraina);
-    
-        //Image* tex = Image::create("Resources/Stone.png");
-    
-        Material material;
-    
-        auto frag = ReadFile("Resources/Shaders/terrain.frag");
-        auto vert = ReadFile("Resources/Shaders/terrain.vert");
-        material.shader = Renderer::loadShader("terrain", vert, frag);
-        material.textures.push_back(Renderer::createTexture("Resources/Stone.png"));
-    
-        bool gotChunk = false;
         for(auto& world : worlds) world.second->start();
     //    Benchmarker benchmarker = Benchmarker();
-    
-        glm::ivec3 lastChunkOffset = glm::ivec3(0,0,0);
-        auto& playerTransform = player.entity->getComponent<Transform>();
-        world->terrain = new TerrainManager(terrainb, material);
+        double avg = 0;
+        int frame = 0;
+        //world->terrain = new TerrainGenerator(2137);
         //client.generateTerrain({0,0,0}, 2);
-        while (!Window::shouldClose()) {
-            update();
+        world->serialize();
+        while (!Window::shouldClose()) { LOG_SCOPE("Frame");
             //client.dispatchEvents();
     
             deltaXMousePos     = cursorXPos - previousXCursorPos;
@@ -164,24 +163,20 @@ namespace Hei {
     
             deltaTime     = currentFrame - previousFrame;
             previousFrame = currentFrame;
-    
-            LOG_SCOPE("Frame");
+                    
             Renderer::clear();
+            update(); //gameclient
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            ImGuiLayer::clear();
+            DEBUG_STATEMENT(ImGuiLayer::clear());
+            DEBUG_STATEMENT(ImGuiLayer::drawEntityList());
+            DEBUG_STATEMENT(ImGuiLayer::drawInspector());
+            DEBUG_STATEMENT(ImGuiLayer::drawTexture(texture, RBO));
+            DEBUG_STATEMENT(ImGuiLayer::draw());
+            DEBUG_STATEMENT(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->getID()));
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             if( Window::isPressed(Keys::KeyEscape) )
                 Window::close();
-   
-
-
-    
-            glm::ivec3 chunkOffset = glm::ivec3(playerTransform.position / 16.0f);
-            if(chunkOffset != lastChunkOffset){
-                lastChunkOffset = chunkOffset;
-                //std::cout<<"eeee jooo"<<std::endl;
-                //generateTerrain(lastChunkOffset, 2);
-            }
-            
+     
             if (Window::isPressed(Keys::KeyR)) {
                 auto shader = Renderer::loadShader("default");
     
@@ -191,8 +186,7 @@ namespace Hei {
                 shader->recomplie(shad1, shad2);
             }
     
-            auto& kr = EventStack::getEvents<WindowApi::KeyPressedEvent>();
-            for (auto* w : kr) {
+            for(auto* w : EventStack::getEvents<WindowApi::KeyPressedEvent>()) { LOG_SCOPE("Key pressed events");
                 if(w->key == Keys::KeyM && !w->repeat) Sound::playSound("Resources/marcin.wav");
                 if(w->key == Keys::KeyC && !w->repeat) Window::showCursor(cursor = !cursor);
                 if(w->key == Keys::KeyP && !w->repeat) {
@@ -203,11 +197,11 @@ namespace Hei {
                     glm::vec3 r = glm::degrees(glm::eulerAngles(camTra.rotation));
                     LOG("X : " + toString(r.x) + " Y : " + toString(r.y) + " Z : " + toString(r.z), 1);
                 }
+
                 EventStack::popFront<WindowApi::KeyPressedEvent>();
             }
     
-            auto& wr = EventStack::getEvents<WindowApi::WindowResizedEvent>();
-            for (auto* w : wr) {
+            for (auto* w : EventStack::getEvents<WindowApi::WindowResizedEvent>()) {
                 camera.resolution = glm::vec2(w->data.width, w->data.height);
                 camera.updatePerspective();
                 Renderer::setViewport(0, 0, w->data.width, w->data.height);
@@ -219,15 +213,20 @@ namespace Hei {
             //camMov.update(mainCamera);
     
             for (auto& world : worlds) world.second->update();
-    
+            
             { LOG_SCOPE("D-F-R");
                 Transform tran = Transform(
                     {10.f, 475.f, 0.f},
-                    {.1f, .1f, .1f}
+                    {0.1f, 0.1f, 0.1f}
                 );
-    
+                avg += deltaTime;
+                frame += 1;
+                if(frame >= 40){
+                    frame -= 20;
+                    avg /= 2;
+                }
                 tran.position = glm::vec3(0, 0, 0);
-                Renderer::renderText(".1% LOW FPS: " + toString(1.0 / deltaTime), tran, "Resources/Fonts/xd.ttf");
+                Renderer::renderText(".1% LOW FPS: " + toString(1.0/(avg/frame)), tran, "Resources/Fonts/xd.ttf");
             }
     
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -236,13 +235,13 @@ namespace Hei {
             auto tmpTra = camTra.getRelativeTransform();
             movePlayer(tmpTra);
             EventStack::clear();
-            ImGuiLayer::draw();
+            Renderer::draw();
             Window::swapBuffers();
             Window::pollEvents ();
     //        benchmarker.frameDone();
         }
         
-        ImGuiLayer::destroy();
+        DEBUG_STATEMENT(ImGuiLayer::destroy());
         Sound::destroy();
         Text ::destroy();
     }
@@ -284,7 +283,7 @@ namespace Hei {
     }
 
     void GameClient::generateTerrain(glm::vec3 pos, int radius){
-        radius += 1;
+        /*radius += 1;
         std::cout<<"chunk requested!\n";
 
         Vector<Pair<float, glm::ivec3>> vec;
@@ -315,7 +314,7 @@ namespace Hei {
             cmd += toString(e.second.z) + ";";
             
             send(cmd);
-        }
+        }*/
     }
 
     void GameClient::onRecive(String& msg){
@@ -329,7 +328,7 @@ namespace Hei {
             // Image* stoneImg = Image::create("Resources/Wood.png");
             Ref<Texture> stoneTex = Renderer::createTexture("Resources/Wood.png");
     
-            players[name] = world->terrain->parent->getScene()->createGameObject(name.c_str());
+            players[name] = world->createGameObject(name.c_str());
             auto& mesh = players[name]->addComponent<Mesh>(createCube());
             mesh.meshRenderer->material.shader = Renderer::loadShader("default");
             mesh.meshRenderer->material.textures.push_back(stoneTex);
@@ -361,7 +360,7 @@ namespace Hei {
             transform.updateTransformMatrix();
         }
 
-        if(parts[0] == "gcr"){
+        if(parts[0] == "gcr"){/*
             //String& world = parts[1];
             
             LOG(msg, 3);
@@ -384,6 +383,6 @@ namespace Hei {
             std::cout<<"chunk recived!\n";
             worlds["Overworld"]->terrain->renderChunk(data, {offsetX, offsetY, offsetZ});
             //EventStack::addEvent(new GotChunkNetwork(data));
-        }
+        */}
     }
 }

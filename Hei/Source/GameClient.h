@@ -3,14 +3,13 @@
 #include <ENet/Client.h>
 #include <Core/Aliases.h>
 #include <Core/Components/Entity.h>
-#include "TerrainRenderer.h"
+#include "TerrainGenerator.h"
 using namespace PetrolEngine;
 
 namespace Hei {
     extern bool cursor;
     class World: public Scene {
     public:
-        TerrainManager* terrain = nullptr;
         
     };
     

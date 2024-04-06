@@ -2,10 +2,10 @@
 
 #include "Core/Aliases.h"
 #include "../TerrainGenerator.h"
-#include "../TerrainRenderer.h"
+//#include "../TerrainRenderer.h"
 #include <ENet/Server.h>
 #include "../Chunk.h"
-
+using namespace PetrolEngine;
 namespace Hei {
     class GameServer: public Server {
     public:
@@ -14,17 +14,16 @@ namespace Hei {
             glm::quat rotation;
         };
     public:
-        Entity* worldParent = nullptr; // TODO: remove it i think?
-        Hei::GameLoader* world;
+        //Entity* worldParent = nullptr; // TODO: remove it i think?
+        //Hei::GameLoader* world;
         UnorderedMap<String, Player> players;
         
         GameServer(int port): PetrolEngine::Server(port) {
-            world = new Hei::GameLoader();
+            //world = new Hei::GameLoader();
         }
         
         virtual void onRecive(Peer& client, String& msg){
             Vector<String> parts = split(msg, ';');
-                LOG(msg, 3); 
     
             if(parts[0] == "wj"){
                 String resp = "np;"; // new player
@@ -45,7 +44,7 @@ namespace Hei {
                 this->broadcast(msg);
             }
     
-            if(parts[0] == "gc"){ 
+            if(parts[0] == "gc"){ /*
                 int cx = stoi(parts[1]);
                 int cy = stoi(parts[2]);
                 int cz = stoi(parts[3]);
@@ -77,7 +76,7 @@ namespace Hei {
                 }
                 resp += ";";
 
-                client.send(resp);
+                client.send(resp);*/
             }
         }
     };

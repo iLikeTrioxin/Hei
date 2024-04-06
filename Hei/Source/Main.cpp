@@ -1,7 +1,6 @@
 #include <cstring>
 #include <string>
 #define PETROL_ENGINE_DEBUG
-#define DEBUG
 
 #include <thread>
 #include <iostream>
